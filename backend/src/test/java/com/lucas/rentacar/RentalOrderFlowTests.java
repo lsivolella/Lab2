@@ -110,23 +110,67 @@ class RentalOrderFlowTests {
         perform(get("/api/orders/" + orderId), otherCustomer, 404);
         perform(get("/api/orders/" + orderId), agent, 200);
 
-        // Only agents evaluate; contract requires approval first.
+        // Without credit, only the company that owns the car evaluates;
+        // contract requires approval first.
         perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), customer, 403);
-        perform(post("/api/orders/" + orderId + "/contract"), agent, 409);
+        perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), bank, 403);
+        perform(post("/api/orders/" + orderId + "/contract").content(contractJson("COMPANY")), agent, 409);
 
         String evaluated = perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), agent, 200);
         assertJson(evaluated, "$.status", "APPROVED");
         assertJson(evaluated, "$.agentOpinion", "Income compatible with the rental.");
+        assertJson(evaluated, "$.creditContract", null);
 
         // After the opinion the customer can no longer change or cancel.
         perform(put("/api/orders/" + orderId).content(orderJson(carId, start, start.plusDays(4))), customer, 409);
         perform(post("/api/orders/" + orderId + "/cancel"), customer, 409);
 
-        String contracted = perform(post("/api/orders/" + orderId + "/contract"), agent, 200);
+        // Bank ownership needs a credit contract; banks do not execute contracts.
+        perform(post("/api/orders/" + orderId + "/contract").content(contractJson("BANK")), agent, 400);
+        perform(post("/api/orders/" + orderId + "/contract").content(contractJson("COMPANY")), bank, 403);
+
+        String contracted = perform(post("/api/orders/" + orderId + "/contract").content(contractJson("CUSTOMER")), agent, 200);
         assertJson(contracted, "$.status", "CONTRACTED");
+        assertJson(contracted, "$.contract.ownershipType", "CUSTOMER");
+        assertJson(contracted, "$.contract.owner.name", "Integration Test");
 
         // A car with orders in progress cannot be deleted.
         perform(delete("/api/cars/" + carId), agent, 409);
+    }
+
+    @Test
+    void bankEvaluatesOrdersWithCreditAndGrantsTheCreditContract() throws Exception {
+        long carId = createCar("100.00");
+        LocalDate start = LocalDate.now().plusDays(30);
+
+        // 3 days x 100.00 = 300.00, financed.
+        String created = perform(
+                post("/api/orders").content(orderJson(carId, start, start.plusDays(3), true)),
+                customer,
+                201);
+        long orderId = id(created);
+        assertJson(created, "$.creditRequested", true);
+
+        // Orders with credit are evaluated by a bank, which must set the terms.
+        perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), agent, 403);
+        perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), bank, 400);
+
+        // 2% a month in 3 installments (Price table): 104.03.
+        String evaluated = perform(
+                post("/api/orders/" + orderId + "/evaluation").content(creditEvaluationJson("2.00", 3)),
+                bank,
+                200);
+        assertJson(evaluated, "$.status", "APPROVED");
+        assertJson(evaluated, "$.creditContract.amount", 300.0);
+        assertJson(evaluated, "$.creditContract.installmentAmount", 104.03);
+
+        // The car owner executes the contract, registering the car to the bank.
+        String contracted = perform(post("/api/orders/" + orderId + "/contract").content(contractJson("BANK")), agent, 200);
+        assertJson(contracted, "$.contract.ownershipType", "BANK");
+        assertJson(
+                contracted,
+                "$.contract.owner.name",
+                JsonPath.read(perform(get("/api/users/me"), bank, 200), "$.name"));
     }
 
     @Test
@@ -225,15 +269,32 @@ class RentalOrderFlowTests {
     }
 
     private static String orderJson(long carId, LocalDate start, LocalDate end) {
+        return orderJson(carId, start, end, false);
+    }
+
+    private static String orderJson(long carId, LocalDate start, LocalDate end, boolean creditRequested) {
         return """
-                {"carId":%d,"startDate":"%s","endDate":"%s"}
-                """.formatted(carId, start, end);
+                {"carId":%d,"startDate":"%s","endDate":"%s","creditRequested":%s}
+                """.formatted(carId, start, end, creditRequested);
     }
 
     private static String evaluationJson(boolean approved) {
         return """
                 {"approved":%s,"opinion":"Income compatible with the rental."}
                 """.formatted(approved);
+    }
+
+    private static String creditEvaluationJson(String monthlyInterestRate, int installments) {
+        return """
+                {"approved":true,"opinion":"Credit approved.",
+                 "credit":{"monthlyInterestRate":%s,"installments":%d}}
+                """.formatted(monthlyInterestRate, installments);
+    }
+
+    private static String contractJson(String ownershipType) {
+        return """
+                {"ownershipType":"%s"}
+                """.formatted(ownershipType);
     }
 
     /** Random CPF with valid check digits. */
