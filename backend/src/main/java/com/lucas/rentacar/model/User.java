@@ -85,6 +85,10 @@ public class User {
         return deletedAt;
     }
 
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
     @PrePersist
     private void onCreate() {
         Instant now = Instant.now();

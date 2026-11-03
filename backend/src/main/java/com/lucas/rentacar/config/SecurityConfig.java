@@ -61,6 +61,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/docs", "/docs/**", "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+                        // Order matters: /me must match before /{id}.
+                        .requestMatchers("/api/customers/me")
+                        .hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/customers", "/api/customers/*")
+                        .hasRole("AGENT")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

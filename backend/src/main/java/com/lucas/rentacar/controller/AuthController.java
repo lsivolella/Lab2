@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lucas.rentacar.dto.auth.LoginRequest;
 import com.lucas.rentacar.dto.auth.RegisterRequest;
 import com.lucas.rentacar.dto.user.UserResponse;
+import com.lucas.rentacar.service.CustomerService;
 import com.lucas.rentacar.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,14 +31,17 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private final CustomerService customerService;
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
 
     public AuthController(
+            CustomerService customerService,
             UserService userService,
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository) {
+        this.customerService = customerService;
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
@@ -49,7 +53,7 @@ public class AuthController {
             @RequestBody
             RegisterRequest request) {
 
-        UserResponse user = userService.create(request);
+        UserResponse user = customerService.create(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
