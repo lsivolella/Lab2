@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import com.lucas.rentacar.enums.OrderStatus;
 
 import jakarta.persistence.Column;
@@ -16,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -111,6 +114,19 @@ public class RentalOrder {
         this.totalAmount = totalAmount;
     }
 
+    // When true, a bank evaluates the order and grants a credit contract.
+    @ColumnDefault("false")
+    @Column(nullable = false)
+    private boolean creditRequested;
+
+    public boolean isCreditRequested() {
+        return creditRequested;
+    }
+
+    public void setCreditRequested(boolean creditRequested) {
+        this.creditRequested = creditRequested;
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private OrderStatus status;
@@ -154,6 +170,28 @@ public class RentalOrder {
 
     public void setEvaluatedAt(Instant evaluatedAt) {
         this.evaluatedAt = evaluatedAt;
+    }
+
+    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
+    private CreditContract creditContract;
+
+    public CreditContract getCreditContract() {
+        return creditContract;
+    }
+
+    public void setCreditContract(CreditContract creditContract) {
+        this.creditContract = creditContract;
+    }
+
+    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
+    private Contract contract;
+
+    public Contract getContract() {
+        return contract;
+    }
+
+    public void setContract(Contract contract) {
+        this.contract = contract;
     }
 
     @Column(nullable = false, updatable = false)

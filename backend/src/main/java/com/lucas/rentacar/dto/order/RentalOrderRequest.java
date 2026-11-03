@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotNull;
 
 /**
  * Create or change an order. endDate is the return date and must be after
- * startDate (checked in RentalOrderService).
+ * startDate (checked in RentalOrderService). creditRequested is optional
+ * (false when omitted); when true, a bank evaluates the order.
  */
 public record RentalOrderRequest(
         @NotNull(message = "Car is required.")
@@ -18,5 +19,11 @@ public record RentalOrderRequest(
         LocalDate startDate,
 
         @NotNull(message = "End date is required.")
-        LocalDate endDate) {
+        LocalDate endDate,
+
+        Boolean creditRequested) {
+
+    public boolean wantsCredit() {
+        return Boolean.TRUE.equals(creditRequested);
+    }
 }

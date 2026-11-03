@@ -1,15 +1,23 @@
 package com.lucas.rentacar.dto.order;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/** The agent's financial opinion ("parecer") on a submitted order. */
+/**
+ * The agent's financial opinion ("parecer") on a submitted order. credit is
+ * required when a bank approves an order that requested credit, and must be
+ * omitted otherwise (checked in RentalOrderService).
+ */
 public record OrderEvaluationRequest(
         @NotNull(message = "Approved is required.")
         Boolean approved,
 
         @NotBlank(message = "Opinion is required.")
         @Size(max = 1000, message = "Opinion must be at most 1000 characters.")
-        String opinion) {
+        String opinion,
+
+        @Valid
+        CreditTermsRequest credit) {
 }

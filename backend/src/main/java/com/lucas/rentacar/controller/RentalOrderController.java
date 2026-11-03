@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.lucas.rentacar.dto.order.ContractRequest;
 import com.lucas.rentacar.dto.order.OrderEvaluationRequest;
 import com.lucas.rentacar.dto.order.RentalOrderRequest;
 import com.lucas.rentacar.dto.order.RentalOrderResponse;
@@ -106,9 +107,10 @@ public class RentalOrderController {
     @PostMapping("/{id}/contract")
     public RentalOrderResponse contract(
             Authentication authentication,
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @Valid @RequestBody ContractRequest request) {
 
-        return rentalOrderService.contract(authentication.getName(), id);
+        return rentalOrderService.contract(authentication.getName(), id, request);
     }
 
     private boolean isAgent(Authentication authentication) {
