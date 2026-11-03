@@ -66,6 +66,17 @@ public class SecurityConfig {
                         .hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/customers", "/api/customers/*")
                         .hasRole("AGENT")
+                        // Cars: everyone logged in reads, agents manage the fleet.
+                        .requestMatchers(HttpMethod.GET, "/api/cars", "/api/cars/*")
+                        .authenticated()
+                        .requestMatchers("/api/cars", "/api/cars/**")
+                        .hasRole("AGENT")
+                        // Orders: read/change for both roles (ownership checked in
+                        // RentalOrderService); each action belongs to one role.
+                        .requestMatchers(HttpMethod.POST, "/api/orders", "/api/orders/*/cancel")
+                        .hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/evaluation", "/api/orders/*/contract")
+                        .hasRole("AGENT")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

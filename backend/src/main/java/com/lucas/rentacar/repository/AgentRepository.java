@@ -10,4 +10,6 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
     boolean existsByCnpj(String cnpj);
 
     Optional<Agent> findByUserId(Long userId);
+
+    Optional<Agent> findByUserEmail(String email);
 }
