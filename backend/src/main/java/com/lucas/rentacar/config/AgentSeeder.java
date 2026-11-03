@@ -1,7 +1,5 @@
 package com.lucas.rentacar.config;
 
-import java.util.Locale;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -17,6 +15,7 @@ import com.lucas.rentacar.model.Agent;
 import com.lucas.rentacar.model.User;
 import com.lucas.rentacar.repository.AgentRepository;
 import com.lucas.rentacar.repository.UserRepository;
+import com.lucas.rentacar.service.UserService;
 
 /**
  * Creates the agent accounts (companies and banks) listed under app.seed.agents
@@ -59,7 +58,7 @@ public class AgentSeeder implements ApplicationRunner {
             return;
         }
 
-        String email = seed.email().trim().toLowerCase(Locale.ROOT);
+        String email = UserService.normalizeEmail(seed.email());
 
         if (userRepository.existsByEmail(email)
                 || agentRepository.existsByCnpj(seed.cnpj())) {

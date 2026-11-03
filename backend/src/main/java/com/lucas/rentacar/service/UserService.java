@@ -17,9 +17,11 @@ import com.lucas.rentacar.dto.customer.EmploymentIncomeRequest;
 import com.lucas.rentacar.dto.user.UserResponse;
 import com.lucas.rentacar.enums.Role;
 import com.lucas.rentacar.model.Address;
+import com.lucas.rentacar.model.Agent;
 import com.lucas.rentacar.model.Customer;
 import com.lucas.rentacar.model.EmploymentIncome;
 import com.lucas.rentacar.model.User;
+import com.lucas.rentacar.repository.AgentRepository;
 import com.lucas.rentacar.repository.CustomerRepository;
 import com.lucas.rentacar.repository.UserRepository;
 
@@ -28,14 +30,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final AgentRepository agentRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(
             UserRepository userRepository,
             CustomerRepository customerRepository,
+            AgentRepository agentRepository,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
+        this.agentRepository = agentRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -50,11 +55,37 @@ public class UserService {
         Customer savedCustomer = customerRepository.save(
                 createCustomer(request, savedUser, cpf));
 
-        return toResponse(savedUser, savedCustomer);
+        return toResponse(savedUser, savedCustomer.getName());
     }
 
-    private String normalizeEmail(String email) {
+    @Transactional(readOnly = true)
+    public UserResponse findByEmail(String email) {
+        User user = userRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found."));
+
+        return toResponse(user, findProfileName(user));
+    }
+
+    public static String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String findProfileName(User user) {
+        return switch (user.getRole()) {
+            case CUSTOMER -> customerRepository.findByUserId(user.getId())
+                    .map(Customer::getName)
+                    .orElseThrow(() -> missingProfile(user));
+            case AGENT -> agentRepository.findByUserId(user.getId())
+                    .map(Agent::getName)
+                    .orElseThrow(() -> missingProfile(user));
+        };
+    }
+
+    private IllegalStateException missingProfile(User user) {
+        return new IllegalStateException(
+                "No " + user.getRole() + " profile for user " + user.getId() + ".");
     }
 
     private void ensureUniqueData(String email, String cpf) {
@@ -146,10 +177,10 @@ public class UserService {
         return value.trim();
     }
 
-    private UserResponse toResponse(User user, Customer customer) {
+    private UserResponse toResponse(User user, String name) {
         return new UserResponse(
                 user.getId(),
-                customer.getName(),
+                name,
                 user.getEmail(),
                 user.getRole());
     }
