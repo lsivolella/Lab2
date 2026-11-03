@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.lucas.rentacar.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByEmail(String email);
 
     boolean existsByCpf(String cpf);
 }

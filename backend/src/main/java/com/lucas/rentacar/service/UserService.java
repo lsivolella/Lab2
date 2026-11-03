@@ -30,7 +30,7 @@ public class UserService {
     @Transactional
     public UserResponse create(RegisterRequest request) {
         String email = normalizeEmail(request.email());
-        String cpf = normalizeCpf(request.cpf());
+        String cpf = request.cpf();
 
         ensureUniqueData(email, cpf);
 
@@ -44,21 +44,17 @@ public class UserService {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
-    private String normalizeCpf(String cpf) {
-        return cpf.replaceAll("\\D", "");
-    }
-
     private void ensureUniqueData(String email, String cpf) {
-        if (userRepository.existsByEmailIgnoreCase(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "E-mail já cadastrado.");
+                    "Email already registered.");
         }
 
         if (userRepository.existsByCpf(cpf)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "CPF já cadastrado.");
+                    "CPF already registered.");
         }
     }
 
