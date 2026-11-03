@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Rentacar (backend)",
+            "request": "launch",
+            "mainClass": "com.lucas.rentacar.application.RentacarApplication",
+            "projectName": "rentacar",
+            "cwd": "${workspaceFolder}/backend"
+        }
+    ]
+}

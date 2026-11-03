@@ -18,6 +18,7 @@ Thumbs.db
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/java-formatter.xml
 *.code-workspace
 
 # IntelliJ IDEA
