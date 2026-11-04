@@ -9,6 +9,7 @@ import { ApiError } from '../api/client';
 import { translate } from '../api/messages';
 import { cancelOrder, updateOrder } from '../api/orders';
 import type { OwnershipType, RentalOrderResponse } from '../types/order';
+import type { UserResponse } from '../types/user';
 import {
     addDays,
     daysBetween,
@@ -16,6 +17,8 @@ import {
     formatDate,
     todayIso,
 } from '../utils/dates';
+import { agentPermissions } from '../utils/permissions';
+import { ContractForm, EvaluationForm } from './AgentOrderActions';
 import { CarImage } from './CarImage';
 import { StatusBadge } from './StatusBadge';
 import { Alert } from './ui/Alert';
@@ -30,21 +33,21 @@ const OWNERSHIP_LABEL: Record<OwnershipType, string> = {
 
 interface OrderCardProps {
     order: RentalOrderResponse;
-    /** Customers can change dates and cancel while the order is SUBMITTED. */
-    editable: boolean;
-    /** Agents see whose order it is. */
-    showCustomer: boolean;
+    /** Logged-in user: decides which actions are offered. */
+    viewer: UserResponse;
     onChange: (order: RentalOrderResponse) => void;
 }
 
-export function OrderCard({
-    order,
-    editable,
-    showCustomer,
-    onChange,
-}: OrderCardProps) {
+type Panel = 'none' | 'evaluate' | 'contract';
+
+/**
+ * One order. Customers change dates or cancel while it is under analysis;
+ * agents evaluate it and execute the contract (see agentPermissions).
+ */
+export function OrderCard({ order, viewer, onChange }: OrderCardProps) {
     const [editing, setEditing] = useState(false);
     const [confirmingCancel, setConfirmingCancel] = useState(false);
+    const [panel, setPanel] = useState<Panel>('none');
     const [startDate, setStartDate] = useState(order.startDate);
     const [endDate, setEndDate] = useState(order.endDate);
     const [creditRequested, setCreditRequested] = useState(
@@ -53,7 +56,11 @@ export function OrderCard({
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
-    const canChange = editable && order.status === 'SUBMITTED';
+    const isCustomer = viewer.role === 'CUSTOMER';
+    const permissions = viewer.agent
+        ? agentPermissions(order, viewer.agent)
+        : null;
+    const canChange = isCustomer && order.status === 'SUBMITTED';
     const today = todayIso();
     const newDays = daysBetween(startDate, endDate);
 
@@ -101,7 +108,7 @@ export function OrderCard({
                         <div>
                             <p className="text-xs font-medium text-ink-500">
                                 Pedido #{order.id}
-                                {showCustomer && ` · ${order.customer.name}`}
+                                {!isCustomer && ` · ${order.customer.name}`}
                             </p>
                             <h2 className="text-lg font-semibold">
                                 {order.car.brand} {order.car.model}
@@ -212,6 +219,52 @@ export function OrderCard({
                     <Alert>{error}</Alert>
                 </div>
             )}
+
+            {permissions?.waitingFor && (
+                <p className="mt-4 rounded-2xl bg-cream-50 px-4 py-3 text-sm text-ink-500">
+                    {permissions.waitingFor}
+                </p>
+            )}
+
+            {panel === 'evaluate' && permissions?.canEvaluate && (
+                <EvaluationForm
+                    order={order}
+                    onDone={(updated) => {
+                        setPanel('none');
+                        onChange(updated);
+                    }}
+                    onClose={() => setPanel('none')}
+                />
+            )}
+
+            {panel === 'contract' && permissions?.canContract && (
+                <ContractForm
+                    order={order}
+                    onDone={(updated) => {
+                        setPanel('none');
+                        onChange(updated);
+                    }}
+                    onClose={() => setPanel('none')}
+                />
+            )}
+
+            {panel === 'none' &&
+                (permissions?.canEvaluate || permissions?.canContract) && (
+                    <div className="mt-4 flex justify-end">
+                        {permissions.canEvaluate ? (
+                            <Button onClick={() => setPanel('evaluate')}>
+                                Avaliar pedido
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="dark"
+                                onClick={() => setPanel('contract')}
+                            >
+                                Executar contrato
+                            </Button>
+                        )}
+                    </div>
+                )}
 
             {canChange && editing && (
                 <form

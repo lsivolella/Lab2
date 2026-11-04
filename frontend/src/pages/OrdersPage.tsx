@@ -129,8 +129,7 @@ export function OrdersPage() {
                         <OrderCard
                             key={order.id}
                             order={order}
-                            editable={isCustomer}
-                            showCustomer={!isCustomer}
+                            viewer={user!}
                             onChange={replace}
                         />
                     ))}

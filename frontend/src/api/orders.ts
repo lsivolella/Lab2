@@ -1,5 +1,7 @@
 import type {
+    OrderEvaluationRequest,
     OrderStatus,
+    OwnershipType,
     RentalOrderRequest,
     RentalOrderResponse,
 } from '../types/order';
@@ -37,5 +39,27 @@ export function updateOrder(
 export function cancelOrder(id: number): Promise<RentalOrderResponse> {
     return api<RentalOrderResponse>(`/orders/${id}/cancel`, {
         method: 'POST',
+    });
+}
+
+/** Agent's financial opinion; banks approving a credit order send credit. */
+export function evaluateOrder(
+    id: number,
+    request: OrderEvaluationRequest,
+): Promise<RentalOrderResponse> {
+    return api<RentalOrderResponse>(`/orders/${id}/evaluation`, {
+        method: 'POST',
+        body: request,
+    });
+}
+
+/** The car owner company executes the contract of an approved order. */
+export function executeContract(
+    id: number,
+    ownershipType: OwnershipType,
+): Promise<RentalOrderResponse> {
+    return api<RentalOrderResponse>(`/orders/${id}/contract`, {
+        method: 'POST',
+        body: { ownershipType },
     });
 }

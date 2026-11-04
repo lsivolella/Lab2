@@ -22,6 +22,63 @@ const MESSAGES: Record<string, string> = {
     'Only submitted orders can be cancelled.':
         'Este pedido já foi avaliado e não pode ser cancelado.',
 
+    // Evaluation and contract (agents)
+    'Orders with credit are evaluated by a bank.':
+        'Pedidos com crédito são avaliados por um banco.',
+    'Only the company that owns the car evaluates this order.':
+        'Só a locadora dona do carro avalia este pedido.',
+    'Only the company that owns the car executes the contract.':
+        'Só a locadora dona do carro executa o contrato.',
+    'Only submitted orders can be evaluated.': 'Este pedido já foi avaliado.',
+    'Only approved orders can be contracted.':
+        'Só pedidos aprovados podem ter contrato.',
+    'Credit terms are required to approve an order with credit.':
+        'Informe juros e parcelas para aprovar o crédito.',
+    'Credit terms are only accepted when a bank approves an order with credit.':
+        'Juros e parcelas só valem quando um banco aprova um pedido com crédito.',
+    'BANK ownership requires a credit contract.':
+        'O registro em nome do banco exige contrato de crédito.',
+    'Opinion is required.': 'Escreva o parecer.',
+
+    // Fleet (company agents)
+    'Only company agents can manage cars.':
+        'Só locadoras podem cadastrar carros.',
+    'Only the owner company can change this car.':
+        'Só a locadora dona do carro pode alterá-lo.',
+    'Plate already registered.': 'Esta placa já está cadastrada.',
+    'Registration already registered.': 'Este RENAVAM já está cadastrado.',
+    'Car has orders in progress.':
+        'O carro tem pedidos em andamento e não pode ser excluído.',
+    'Image file is required.': 'Escolha uma foto.',
+    'Image must be a JPEG, PNG or WebP file.':
+        'A foto deve ser JPG, PNG ou WebP.',
+    'Image must be at most 2 MB.': 'A foto deve ter no máximo 2 MB.',
+    'Maximum upload size exceeded': 'A foto deve ter no máximo 2 MB.',
+    'Image storage is unavailable. Try again later.':
+        'O envio de fotos está indisponível. Tente novamente mais tarde.',
+    'Image storage is not configured.':
+        'O envio de fotos não está configurado no servidor.',
+    'Registration is required.': 'Informe o RENAVAM.',
+    'Registration (RENAVAM) must contain exactly 11 digits.':
+        'O RENAVAM deve ter 11 dígitos.',
+    'Year is required.': 'Informe o ano.',
+    'Year must be 1950 or later.': 'O ano deve ser 1950 ou depois.',
+    'Year must be 2100 or earlier.': 'O ano deve ser 2100 ou antes.',
+    'Brand is required.': 'Informe a marca.',
+    'Brand must be at most 50 characters.':
+        'A marca deve ter no máximo 50 caracteres.',
+    'Model is required.': 'Informe o modelo.',
+    'Model must be at most 50 characters.':
+        'O modelo deve ter no máximo 50 caracteres.',
+    'Plate is required.': 'Informe a placa.',
+    'Plate must look like ABC1234 or ABC1D23.':
+        'A placa deve seguir o formato ABC1234 ou ABC1D23.',
+    'Daily rate is required.': 'Informe o valor da diária.',
+    'Daily rate must be greater than zero.':
+        'A diária deve ser maior que zero.',
+    'Daily rate must have up to 8 digits and 2 decimals.':
+        'A diária deve ter até 2 casas decimais.',
+
     // Validation (per field)
     'Name is required.': 'Informe o nome.',
     'Name must be at most 150 characters.':

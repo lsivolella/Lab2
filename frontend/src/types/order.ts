@@ -50,6 +50,18 @@ export interface RentalOrderResponse {
     updatedAt: string;
 }
 
+export interface OrderEvaluationRequest {
+    approved: boolean;
+    opinion: string;
+    /** Required when a bank approves an order that requested credit. */
+    credit?: {
+        /** Percent per month, 0 to 20. */
+        monthlyInterestRate: number;
+        /** 1 to 60. */
+        installments: number;
+    };
+}
+
 export interface RentalOrderRequest {
     carId: number;
     startDate: string;

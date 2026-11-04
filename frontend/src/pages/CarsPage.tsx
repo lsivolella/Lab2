@@ -1,9 +1,21 @@
-import { Building2, CalendarDays, Hash, Search } from 'lucide-react';
+import {
+    Building2,
+    CalendarDays,
+    Hash,
+    Pencil,
+    Plus,
+    Search,
+    Trash2,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { fetchCars } from '../api/cars';
+import { deleteCar, fetchCars } from '../api/cars';
+import { ApiError } from '../api/client';
+import { translate } from '../api/messages';
 import { BookingForm } from '../components/BookingForm';
+import { CarFormModal } from '../components/CarFormModal';
 import { CarImage } from '../components/CarImage';
 import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import type { CarResponse } from '../types/car';
 import { formatCurrency } from '../utils/dates';
@@ -45,7 +57,93 @@ function CarCard({
     );
 }
 
-function CarDetails({ car, canBook }: { car: CarResponse; canBook: boolean }) {
+/** Edit and delete buttons for the company that owns the car. */
+function OwnerActions({
+    car,
+    onEdit,
+    onDeleted,
+}: {
+    car: CarResponse;
+    onEdit: () => void;
+    onDeleted: (id: number) => void;
+}) {
+    const [confirming, setConfirming] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function handleDelete() {
+        setError(null);
+        setDeleting(true);
+
+        try {
+            await deleteCar(car.id);
+            onDeleted(car.id);
+        } catch (caught) {
+            setError(
+                caught instanceof ApiError
+                    ? translate(caught.message)
+                    : 'Não foi possível conectar ao servidor.',
+            );
+            setConfirming(false);
+        } finally {
+            setDeleting(false);
+        }
+    }
+
+    return (
+        <div className="mt-4 space-y-3 border-t border-cream-200 px-2 pt-4">
+            {error && <Alert>{error}</Alert>}
+            <div className="flex flex-wrap justify-end gap-2">
+                {confirming ? (
+                    <>
+                        <span className="self-center text-sm text-ink-700">
+                            Excluir este carro?
+                        </span>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setConfirming(false)}
+                        >
+                            Não
+                        </Button>
+                        <Button
+                            variant="dark"
+                            loading={deleting}
+                            onClick={handleDelete}
+                        >
+                            Sim, excluir
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <Button
+                            variant="ghost"
+                            className="ring-1 ring-cream-200"
+                            onClick={() => setConfirming(true)}
+                        >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                            Excluir
+                        </Button>
+                        <Button variant="dark" onClick={onEdit}>
+                            <Pencil className="size-4" aria-hidden="true" />
+                            Editar
+                        </Button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function CarDetails({
+    car,
+    canBook,
+    owner,
+}: {
+    car: CarResponse;
+    canBook: boolean;
+    /** Present when the logged-in company owns this car. */
+    owner?: { onEdit: () => void; onDeleted: (id: number) => void };
+}) {
     const specs = [
         { icon: CalendarDays, label: 'Ano', value: String(car.year) },
         { icon: Hash, label: 'Placa', value: car.plate },
@@ -73,6 +171,14 @@ function CarDetails({ car, canBook }: { car: CarResponse; canBook: boolean }) {
                         <span className="text-sm text-ink-500">/dia</span>
                     </p>
                 </div>
+                {owner && (
+                    <OwnerActions
+                        key={car.id}
+                        car={car}
+                        onEdit={owner.onEdit}
+                        onDeleted={owner.onDeleted}
+                    />
+                )}
             </div>
 
             <div className="rounded-3xl bg-ink-900 p-5 text-cream-50">
@@ -107,9 +213,11 @@ function CarDetails({ car, canBook }: { car: CarResponse; canBook: boolean }) {
     );
 }
 
+type FormTarget = { car?: CarResponse } | null;
+
 /**
- * Fleet: customers search, pick a car and request a rental; agents see the
- * same catalog without the booking form.
+ * Fleet: customers search, pick a car and request a rental. Company agents
+ * also register cars and edit or delete their own; banks only browse.
  */
 export function CarsPage() {
     const { user } = useAuth();
@@ -117,8 +225,12 @@ export function CarsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
+    const [onlyMine, setOnlyMine] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [formTarget, setFormTarget] = useState<FormTarget>(null);
     const detailsRef = useRef<HTMLElement>(null);
+
+    const companyId = user?.agent?.type === 'COMPANY' ? user.agent.id : null;
 
     useEffect(() => {
         fetchCars()
@@ -130,12 +242,12 @@ export function CarsPage() {
     const filtered = useMemo(() => {
         const term = query.trim().toLowerCase();
 
-        return term
-            ? cars.filter((car) =>
-                  `${car.brand} ${car.model}`.toLowerCase().includes(term),
-              )
-            : cars;
-    }, [cars, query]);
+        return cars.filter(
+            (car) =>
+                (!onlyMine || car.owner.id === companyId) &&
+                `${car.brand} ${car.model}`.toLowerCase().includes(term),
+        );
+    }, [cars, query, onlyMine, companyId]);
 
     const selected =
         cars.find((car) => car.id === selectedId) ?? filtered[0] ?? null;
@@ -149,15 +261,51 @@ export function CarsPage() {
         }
     }
 
+    function handleSaved(saved: CarResponse) {
+        setCars((current) =>
+            current.some((car) => car.id === saved.id)
+                ? current.map((car) => (car.id === saved.id ? saved : car))
+                : [...current, saved],
+        );
+        setSelectedId(saved.id);
+    }
+
+    function handleDeleted(id: number) {
+        setCars((current) => current.filter((car) => car.id !== id));
+        setSelectedId(null);
+    }
+
     const isCustomer = user?.role === 'CUSTOMER';
+    const ownsSelected = selected !== null && selected.owner.id === companyId;
 
     return (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
             <section className="min-w-0">
-                <h1 className="text-3xl font-bold tracking-tight">
-                    {isCustomer ? 'Encontre seu carro' : 'Frota'}
-                    <span className="text-brand-400">.</span>
-                </h1>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        {isCustomer ? 'Encontre seu carro' : 'Frota'}
+                        <span className="text-brand-400">.</span>
+                    </h1>
+                    {companyId !== null && (
+                        <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-2 text-sm text-ink-700">
+                                <input
+                                    type="checkbox"
+                                    checked={onlyMine}
+                                    onChange={(event) =>
+                                        setOnlyMine(event.target.checked)
+                                    }
+                                    className="size-4 accent-brand-600"
+                                />
+                                Só minha frota
+                            </label>
+                            <Button onClick={() => setFormTarget({})}>
+                                <Plus className="size-4" aria-hidden="true" />
+                                Novo carro
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
                 <label className="relative mt-6 block">
                     <span className="sr-only">Buscar por marca ou modelo</span>
@@ -213,8 +361,30 @@ export function CarsPage() {
                 ref={detailsRef}
                 className="xl:sticky xl:top-6 xl:max-h-[calc(100svh-3rem)] xl:self-start xl:overflow-y-auto xl:rounded-3xl"
             >
-                {selected && <CarDetails car={selected} canBook={isCustomer} />}
+                {selected && (
+                    <CarDetails
+                        car={selected}
+                        canBook={isCustomer}
+                        owner={
+                            ownsSelected
+                                ? {
+                                      onEdit: () =>
+                                          setFormTarget({ car: selected }),
+                                      onDeleted: handleDeleted,
+                                  }
+                                : undefined
+                        }
+                    />
+                )}
             </aside>
+
+            {formTarget && (
+                <CarFormModal
+                    car={formTarget.car}
+                    onSaved={handleSaved}
+                    onClose={() => setFormTarget(null)}
+                />
+            )}
         </div>
     );
 }

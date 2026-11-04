@@ -13,3 +13,14 @@ export interface CarResponse {
     imageUrl: string | null;
     owner: { id: number; name: string };
 }
+
+/** Create or change a car (CarRequest in the backend). */
+export interface CarRequest {
+    registration: string;
+    year: number;
+    brand: string;
+    model: string;
+    /** ABC1234 or ABC1D23, uppercase, no hyphen. */
+    plate: string;
+    dailyRate: number;
+}

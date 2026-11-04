@@ -40,8 +40,11 @@ export async function api<T>(
     { method = 'GET', body }: RequestOptions = {},
 ): Promise<T> {
     const headers: Record<string, string> = {};
+    // FormData (file uploads) goes as is: the browser sets the multipart
+    // Content-Type with its boundary. Anything else is sent as JSON.
+    const isForm = body instanceof FormData;
 
-    if (body !== undefined) {
+    if (body !== undefined && !isForm) {
         headers['Content-Type'] = 'application/json';
     }
 
@@ -55,7 +58,11 @@ export async function api<T>(
     const response = await fetch(`/api${path}`, {
         method,
         headers,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isForm
+            ? body
+            : body !== undefined
+              ? JSON.stringify(body)
+              : undefined,
     });
 
     if (response.status === 204) {
