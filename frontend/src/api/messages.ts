@@ -9,6 +9,19 @@ const MESSAGES: Record<string, string> = {
     'CPF already registered.': 'Este CPF já está cadastrado.',
     'Current password is incorrect.': 'A senha atual está incorreta.',
 
+    // Cars and orders
+    'Car not found.': 'Carro não encontrado.',
+    'Order not found.': 'Pedido não encontrado.',
+    'Car is not available for the selected dates.':
+        'O carro não está disponível nessas datas.',
+    'End date must be after start date.':
+        'A devolução deve ser depois da retirada.',
+    'Start date must be today or later.': 'A retirada deve ser hoje ou depois.',
+    'Only submitted orders can be changed.':
+        'Este pedido já foi avaliado e não pode ser alterado.',
+    'Only submitted orders can be cancelled.':
+        'Este pedido já foi avaliado e não pode ser cancelado.',
+
     // Validation (per field)
     'Name is required.': 'Informe o nome.',
     'Name must be at most 150 characters.':
