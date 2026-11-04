@@ -1,10 +1,16 @@
 package com.lucas.rentacar;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,7 +25,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -32,6 +41,8 @@ import com.lucas.rentacar.dto.customer.AddressRequest;
 import com.lucas.rentacar.enums.AgentType;
 import com.lucas.rentacar.repository.AgentRepository;
 import com.lucas.rentacar.service.CustomerService;
+import com.lucas.rentacar.service.ImageStorageService;
+import com.lucas.rentacar.service.ImageType;
 
 /**
  * End-to-end flow of cars and rental orders through the HTTP layer.
@@ -52,6 +63,10 @@ class RentalOrderFlowTests {
 
     @Autowired
     private AgentRepository agentRepository;
+
+    // Keeps the tests away from the real Supabase Storage bucket.
+    @MockitoBean
+    private ImageStorageService imageStorageService;
 
     // Company agent (owns the cars) and bank agent.
     private RequestPostProcessor agent;
@@ -80,6 +95,32 @@ class RentalOrderFlowTests {
         perform(delete("/api/cars/" + carId), bank, 403);
 
         assertJson(perform(put("/api/cars/" + carId).content(carJson("130.00")), agent, 200), "$.dailyRate", 130.0);
+    }
+
+    @Test
+    void ownerCompanyUploadsTheCarImage() throws Exception {
+        long carId = createCar("120.00");
+        String firstUrl = "https://storage.test/car-images/cars/" + carId + "/first.png";
+        String secondUrl = "https://storage.test/car-images/cars/" + carId + "/second.jpg";
+        byte[] png = { (byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0 };
+        byte[] jpeg = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0 };
+
+        when(imageStorageService.upload(eq("cars/" + carId), any(), eq(ImageType.PNG))).thenReturn(firstUrl);
+        when(imageStorageService.upload(eq("cars/" + carId), any(), eq(ImageType.JPEG))).thenReturn(secondUrl);
+
+        // Only the owner company uploads; the format comes from the content, not the name.
+        uploadImage(carId, image("photo.png", png), customer, 403);
+        uploadImage(carId, image("photo.png", png), bank, 403);
+        uploadImage(carId, image("photo.png", "not an image".getBytes()), agent, 400);
+        uploadImage(carId, image("huge.png", new byte[2 * 1024 * 1024 + 1]), agent, 413);
+        verify(imageStorageService, never()).upload(any(), any(), any());
+
+        assertJson(uploadImage(carId, image("photo.png", png), agent, 200), "$.imageUrl", firstUrl);
+        assertJson(perform(get("/api/cars/" + carId), customer, 200), "$.imageUrl", firstUrl);
+
+        // Replacing the image deletes the previous upload from storage.
+        assertJson(uploadImage(carId, image("photo.jpg", jpeg), agent, 200), "$.imageUrl", secondUrl);
+        verify(imageStorageService).deleteIfStored(firstUrl);
     }
 
     @Test
@@ -198,6 +239,26 @@ class RentalOrderFlowTests {
         long freeCar = createCar("80.00");
         perform(delete("/api/cars/" + freeCar), agent, 204);
         perform(get("/api/cars/" + freeCar), agent, 404);
+    }
+
+    private String uploadImage(
+            long carId,
+            MockMultipartFile file,
+            RequestPostProcessor user,
+            int expectedStatus) throws Exception {
+
+        return mockMvc.perform(multipart(HttpMethod.PUT, "/api/cars/" + carId + "/image")
+                .file(file)
+                .with(user)
+                .with(csrf()))
+                .andExpect(status().is(expectedStatus))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+    }
+
+    private static MockMultipartFile image(String filename, byte[] content) {
+        return new MockMultipartFile("file", filename, "image/png", content);
     }
 
     private long createCar(String dailyRate) throws Exception {
