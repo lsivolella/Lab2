@@ -6,7 +6,7 @@ import { translate, translateErrors } from '../api/messages';
 import { FormSection } from './FormSection';
 import { Alert } from './ui/Alert';
 import { Button } from './ui/Button';
-import { TextField } from './ui/TextField';
+import { PasswordField } from './ui/PasswordField';
 
 const EMPTY = { current: '', next: '', confirmation: '' };
 
@@ -82,29 +82,26 @@ export function ChangePasswordForm() {
                         <Alert>{error}</Alert>
                     </div>
                 )}
-                <TextField
+                <PasswordField
                     className="sm:col-span-6"
                     label="Senha atual"
-                    type="password"
                     autoComplete="current-password"
                     value={form.current}
                     error={errors.current}
                     onChange={(event) => update('current', event.target.value)}
                 />
-                <TextField
+                <PasswordField
                     className="sm:col-span-3"
                     label="Nova senha"
-                    type="password"
                     autoComplete="new-password"
                     hint="Entre 8 e 72 caracteres."
                     value={form.next}
                     error={errors.next}
                     onChange={(event) => update('next', event.target.value)}
                 />
-                <TextField
+                <PasswordField
                     className="sm:col-span-3"
                     label="Confirme a nova senha"
-                    type="password"
                     autoComplete="new-password"
                     value={form.confirmation}
                     error={errors.confirmation}

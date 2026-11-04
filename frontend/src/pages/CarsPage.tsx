@@ -8,7 +8,8 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { deleteCar, fetchCars } from '../api/cars';
+import { Navigate } from 'react-router';
+import { deleteCar, fetchCars, fetchMyCars } from '../api/cars';
 import { ApiError } from '../api/client';
 import { translate } from '../api/messages';
 import { BookingForm } from '../components/BookingForm';
@@ -204,8 +205,7 @@ function CarDetails({
 
                 {canBook && (
                     <div className="mt-5 rounded-3xl bg-white p-4 text-ink-900">
-                        {/* key: start a fresh form when another car is picked */}
-                        <BookingForm key={car.id} car={car} />
+                        <BookingForm car={car} />
                     </div>
                 )}
             </div>
@@ -216,8 +216,9 @@ function CarDetails({
 type FormTarget = { car?: CarResponse } | null;
 
 /**
- * Fleet: customers search, pick a car and request a rental. Company agents
- * also register cars and edit or delete their own; banks only browse.
+ * Cars: customers search the whole catalog, pick a car and request a rental.
+ * A company agent sees and manages only its own fleet. Banks have no fleet
+ * and are sent to the orders.
  */
 export function CarsPage() {
     const { user } = useAuth();
@@ -225,29 +226,32 @@ export function CarsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
-    const [onlyMine, setOnlyMine] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [formTarget, setFormTarget] = useState<FormTarget>(null);
     const detailsRef = useRef<HTMLElement>(null);
 
     const companyId = user?.agent?.type === 'COMPANY' ? user.agent.id : null;
+    const isBank = user?.agent?.type === 'BANK';
 
     useEffect(() => {
-        fetchCars()
+        if (isBank) {
+            return;
+        }
+
+        // A company manages only its own fleet; customers see the whole catalog.
+        (companyId !== null ? fetchMyCars() : fetchCars())
             .then((page) => setCars(page.content))
             .catch(() => setError('Não foi possível carregar os carros.'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [companyId, isBank]);
 
     const filtered = useMemo(() => {
         const term = query.trim().toLowerCase();
 
-        return cars.filter(
-            (car) =>
-                (!onlyMine || car.owner.id === companyId) &&
-                `${car.brand} ${car.model}`.toLowerCase().includes(term),
+        return cars.filter((car) =>
+            `${car.brand} ${car.model}`.toLowerCase().includes(term),
         );
-    }, [cars, query, onlyMine, companyId]);
+    }, [cars, query]);
 
     const selected =
         cars.find((car) => car.id === selectedId) ?? filtered[0] ?? null;
@@ -278,32 +282,24 @@ export function CarsPage() {
     const isCustomer = user?.role === 'CUSTOMER';
     const ownsSelected = selected !== null && selected.owner.id === companyId;
 
+    // Banks have no fleet: their work is in the orders.
+    if (isBank) {
+        return <Navigate to="/pedidos" replace />;
+    }
+
     return (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
             <section className="min-w-0">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <h1 className="text-3xl font-bold tracking-tight">
-                        {isCustomer ? 'Encontre seu carro' : 'Frota'}
+                        {isCustomer ? 'Encontre seu carro' : 'Minha frota'}
                         <span className="text-brand-400">.</span>
                     </h1>
                     {companyId !== null && (
-                        <div className="flex items-center gap-3">
-                            <label className="flex items-center gap-2 text-sm text-ink-700">
-                                <input
-                                    type="checkbox"
-                                    checked={onlyMine}
-                                    onChange={(event) =>
-                                        setOnlyMine(event.target.checked)
-                                    }
-                                    className="size-4 accent-brand-600"
-                                />
-                                Só minha frota
-                            </label>
-                            <Button onClick={() => setFormTarget({})}>
-                                <Plus className="size-4" aria-hidden="true" />
-                                Novo carro
-                            </Button>
-                        </div>
+                        <Button onClick={() => setFormTarget({})}>
+                            <Plus className="size-4" aria-hidden="true" />
+                            Novo carro
+                        </Button>
                     )}
                 </div>
 
@@ -331,9 +327,12 @@ export function CarsPage() {
                 {!loading && !error && (
                     <p className="mt-6 text-sm text-ink-500">
                         {filtered.length}{' '}
-                        {filtered.length === 1
-                            ? 'carro disponível'
-                            : 'carros disponíveis'}
+                        {filtered.length === 1 ? 'carro' : 'carros'}
+                        {isCustomer
+                            ? filtered.length === 1
+                                ? ' disponível'
+                                : ' disponíveis'
+                            : ' na frota'}
                     </p>
                 )}
 

@@ -2,19 +2,32 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { fetchOrders } from '../api/orders';
 import { OrderCard } from '../components/OrderCard';
-import { STATUS_LABEL } from '../components/statusLabels';
+import {
+    DISPLAY_LABEL,
+    displayStatus,
+    type DisplayStatus,
+} from '../components/statusLabels';
 import { Alert } from '../components/ui/Alert';
 import { useAuth } from '../hooks/useAuth';
 import type { OrderStatus, RentalOrderResponse } from '../types/order';
 
-const FILTERS: (OrderStatus | null)[] = [
+const FILTERS: (DisplayStatus | null)[] = [
     null,
     'SUBMITTED',
     'APPROVED',
     'CONTRACTED',
+    'IN_PROGRESS',
+    'FINISHED',
     'REJECTED',
     'CANCELLED',
 ];
+
+/** Status sent to the API: the contract phases are all CONTRACTED there. */
+function apiStatus(filter: DisplayStatus): OrderStatus {
+    return filter === 'IN_PROGRESS' || filter === 'FINISHED'
+        ? 'CONTRACTED'
+        : filter;
+}
 
 /**
  * Orders: customers follow their own orders (and change or cancel them while
@@ -23,17 +36,23 @@ const FILTERS: (OrderStatus | null)[] = [
 export function OrdersPage() {
     const { user } = useAuth();
     const [orders, setOrders] = useState<RentalOrderResponse[]>([]);
-    const [filter, setFilter] = useState<OrderStatus | null>(null);
+    const [filter, setFilter] = useState<DisplayStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         let ignore = false;
 
-        fetchOrders(filter ?? undefined)
+        fetchOrders(filter ? apiStatus(filter) : undefined)
             .then((page) => {
                 if (!ignore) {
-                    setOrders(page.content);
+                    setOrders(
+                        filter
+                            ? page.content.filter(
+                                  (order) => displayStatus(order) === filter,
+                              )
+                            : page.content,
+                    );
                     setError(null);
                 }
             })
@@ -53,14 +72,14 @@ export function OrdersPage() {
         };
     }, [filter]);
 
-    function changeFilter(next: OrderStatus | null) {
+    function changeFilter(next: DisplayStatus | null) {
         setLoading(true);
         setFilter(next);
     }
 
     function replace(updated: RentalOrderResponse) {
         setOrders((current) =>
-            filter && updated.status !== filter
+            filter && displayStatus(updated) !== filter
                 ? current.filter((order) => order.id !== updated.id)
                 : current.map((order) =>
                       order.id === updated.id ? updated : order,
@@ -78,7 +97,7 @@ export function OrdersPage() {
             </h1>
 
             <div
-                className="mt-6 flex gap-2 overflow-x-auto pb-1"
+                className="-mx-1 mt-5 flex gap-2 overflow-x-auto p-1"
                 role="group"
                 aria-label="Filtrar por status"
             >
@@ -94,7 +113,7 @@ export function OrdersPage() {
                                 : 'bg-white text-ink-700 ring-1 ring-cream-200 hover:bg-cream-50'
                         }`}
                     >
-                        {status ? STATUS_LABEL[status] : 'Todos'}
+                        {status ? DISPLAY_LABEL[status] : 'Todos'}
                     </button>
                 ))}
             </div>

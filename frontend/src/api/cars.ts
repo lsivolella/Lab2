@@ -7,6 +7,11 @@ export function fetchCars(): Promise<Page<CarResponse>> {
     return api<Page<CarResponse>>('/cars?size=100&sort=brand&sort=model');
 }
 
+/** Fleet of the logged-in company agent. */
+export function fetchMyCars(): Promise<Page<CarResponse>> {
+    return api<Page<CarResponse>>('/cars/mine?size=100&sort=brand&sort=model');
+}
+
 export function createCar(request: CarRequest): Promise<CarResponse> {
     return api<CarResponse>('/cars', { method: 'POST', body: request });
 }

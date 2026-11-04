@@ -114,7 +114,7 @@ export function OrderCard({ order, viewer, onChange }: OrderCardProps) {
                                 {order.car.brand} {order.car.model}
                             </h2>
                         </div>
-                        <StatusBadge status={order.status} />
+                        <StatusBadge order={order} />
                     </div>
 
                     <p className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-ink-700">

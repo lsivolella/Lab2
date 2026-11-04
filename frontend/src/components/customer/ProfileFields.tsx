@@ -1,7 +1,12 @@
 import { Plus, Trash2 } from 'lucide-react';
-import { formatCpf, formatZipCode } from '../../utils/format';
+import { useRef, useState } from 'react';
+import { lookupZipCode } from '../../api/addresses';
+import { ApiError } from '../../api/client';
+import { translate } from '../../api/messages';
+import { formatCpf, formatZipCode, onlyDigits } from '../../utils/format';
 import { FormSection } from '../FormSection';
 import { Button } from '../ui/Button';
+import { MoneyField } from '../ui/MoneyField';
 import { SelectField } from '../ui/SelectField';
 import { TextField } from '../ui/TextField';
 import {
@@ -44,6 +49,11 @@ export function ProfileFields({
     onIncomesChange,
     onClearError,
 }: ProfileFieldsProps) {
+    const numberRef = useRef<HTMLInputElement>(null);
+    const lastLookup = useRef('');
+    const [lookingUp, setLookingUp] = useState(false);
+    const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+
     function field(
         name: keyof ProfileForm,
         format?: (value: string) => string,
@@ -57,6 +67,64 @@ export function ProfileFields({
                 onClearError(errorPath(name));
             },
         };
+    }
+
+    /**
+     * When the CEP is complete, fills street, district, city and state from the
+     * lookup and moves the cursor to the number. On failure the user just fills
+     * the address in by hand.
+     */
+    async function changeZipCode(value: string) {
+        const formatted = formatZipCode(value);
+        const digits = onlyDigits(formatted);
+
+        onFieldChange('zipCode', formatted);
+        onClearError(errorPath('zipCode'));
+        lastLookup.current = digits;
+        setLookupMessage(null);
+
+        if (digits.length !== 8) {
+            return;
+        }
+
+        setLookingUp(true);
+
+        try {
+            const address = await lookupZipCode(digits);
+
+            // Ignore answers for a CEP the user has already changed.
+            if (lastLookup.current !== digits) {
+                return;
+            }
+
+            const found: [keyof ProfileForm, string][] = [
+                ['street', address.street],
+                ['district', address.district],
+                ['city', address.city],
+                ['state', address.state],
+            ];
+
+            for (const [name, fieldValue] of found) {
+                if (fieldValue) {
+                    onFieldChange(name, fieldValue);
+                    onClearError(errorPath(name));
+                }
+            }
+
+            numberRef.current?.focus();
+        } catch (caught) {
+            if (lastLookup.current === digits) {
+                setLookupMessage(
+                    caught instanceof ApiError
+                        ? translate(caught.message)
+                        : 'Não foi possível buscar o CEP. Preencha o endereço.',
+                );
+            }
+        } finally {
+            if (lastLookup.current === digits) {
+                setLookingUp(false);
+            }
+        }
     }
 
     function updateIncome(index: number, key: keyof IncomeRow, value: string) {
@@ -108,7 +176,18 @@ export function ProfileFields({
                     inputMode="numeric"
                     autoComplete="postal-code"
                     placeholder="00000-000"
-                    {...field('zipCode', formatZipCode)}
+                    value={form.zipCode}
+                    error={
+                        errors[errorPath('zipCode')] ??
+                        lookupMessage ??
+                        undefined
+                    }
+                    hint={
+                        lookingUp
+                            ? 'Buscando endereço…'
+                            : 'Preenche o endereço.'
+                    }
+                    onChange={(event) => changeZipCode(event.target.value)}
                 />
                 <TextField
                     className="sm:col-span-4"
@@ -119,6 +198,7 @@ export function ProfileFields({
                 <TextField
                     className="sm:col-span-2"
                     label="Número"
+                    ref={numberRef}
                     {...field('number')}
                 />
                 <TextField
@@ -169,20 +249,12 @@ export function ProfileFields({
                                 )
                             }
                         />
-                        <TextField
+                        <MoneyField
                             label="Rendimento (R$)"
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            inputMode="decimal"
                             value={income.amount}
                             error={errors[`incomes[${index}].amount`]}
-                            onChange={(event) =>
-                                updateIncome(
-                                    index,
-                                    'amount',
-                                    event.target.value,
-                                )
+                            onValueChange={(value) =>
+                                updateIncome(index, 'amount', value)
                             }
                         />
                         <button

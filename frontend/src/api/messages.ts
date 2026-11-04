@@ -79,6 +79,11 @@ const MESSAGES: Record<string, string> = {
     'Daily rate must have up to 8 digits and 2 decimals.':
         'A diária deve ter até 2 casas decimais.',
 
+    // Address lookup (CEP)
+    'ZIP code not found.': 'CEP não encontrado. Preencha o endereço.',
+    'Address lookup is unavailable. Fill in the address manually.':
+        'Não foi possível buscar o CEP. Preencha o endereço.',
+
     // Validation (per field)
     'Name is required.': 'Informe o nome.',
     'Name must be at most 150 characters.':

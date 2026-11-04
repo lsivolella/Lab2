@@ -6,6 +6,9 @@ export type OrderStatus =
 
 export type OwnershipType = 'CUSTOMER' | 'COMPANY' | 'BANK';
 
+/** Where a CONTRACTED order stands in time (calculated by the backend). */
+export type ContractPhase = 'UPCOMING' | 'IN_PROGRESS' | 'FINISHED';
+
 export interface Party {
     id: number;
     name: string;
@@ -32,6 +35,8 @@ export interface Contract {
 export interface RentalOrderResponse {
     id: number;
     status: OrderStatus;
+    /** Only for CONTRACTED orders; null otherwise. */
+    contractPhase: ContractPhase | null;
     startDate: string;
     /** Return date: the rental is endDate - startDate days. */
     endDate: string;

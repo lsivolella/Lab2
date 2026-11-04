@@ -9,6 +9,7 @@ import { CarImage } from './CarImage';
 import { Alert } from './ui/Alert';
 import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
+import { MoneyField } from './ui/MoneyField';
 import { TextField } from './ui/TextField';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -251,15 +252,12 @@ export function CarFormModal({ car, onSaved, onClose }: CarFormModalProps) {
                                 update('year', event.target.value)
                             }
                         />
-                        <TextField
+                        <MoneyField
                             label="Diária (R$)"
-                            type="number"
-                            min="0.01"
-                            step="0.01"
                             value={form.dailyRate}
                             error={errors.dailyRate}
-                            onChange={(event) =>
-                                update('dailyRate', event.target.value)
+                            onValueChange={(value) =>
+                                update('dailyRate', value)
                             }
                         />
                         <TextField

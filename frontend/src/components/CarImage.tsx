@@ -7,7 +7,11 @@ interface CarImageProps {
     className?: string;
 }
 
-/** Car photo, or a neutral placeholder when there is none or it fails to load. */
+/**
+ * Car photo, or a neutral placeholder when there is none or it fails to load.
+ * The whole car is always visible (object-contain, never cropped); photos
+ * usually have a white background, so the empty space is white too.
+ */
 export function CarImage({ car, className = '' }: CarImageProps) {
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const showImage = car.imageUrl && car.imageUrl !== failedUrl;
@@ -30,7 +34,7 @@ export function CarImage({ car, className = '' }: CarImageProps) {
             alt={`${car.brand} ${car.model}`}
             loading="lazy"
             onError={() => setFailedUrl(car.imageUrl)}
-            className={`object-cover ${className}`}
+            className={`bg-white object-contain p-2 ${className}`}
         />
     );
 }

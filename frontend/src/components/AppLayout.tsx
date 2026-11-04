@@ -8,7 +8,7 @@ import {
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
-import type { Role } from '../types/user';
+import type { UserResponse } from '../types/user';
 
 interface NavItem {
     to: string;
@@ -16,23 +16,33 @@ interface NavItem {
     icon: LucideIcon;
 }
 
-const NAV: Record<Role, NavItem[]> = {
-    CUSTOMER: [
-        { to: '/carros', label: 'Carros', icon: CarFront },
-        { to: '/pedidos', label: 'Meus pedidos', icon: ClipboardList },
-        { to: '/perfil', label: 'Meu perfil', icon: UserRound },
-    ],
-    AGENT: [
-        { to: '/pedidos', label: 'Pedidos', icon: ClipboardList },
-        { to: '/carros', label: 'Frota', icon: CarFront },
-        { to: '/perfil', label: 'Minha conta', icon: UserRound },
-    ],
-};
+/** Menu of each kind of user: customer, company agent or bank agent. */
+function navItems(user: UserResponse): NavItem[] {
+    if (user.role === 'CUSTOMER') {
+        return [
+            { to: '/carros', label: 'Carros', icon: CarFront },
+            { to: '/pedidos', label: 'Meus pedidos', icon: ClipboardList },
+            { to: '/perfil', label: 'Meu perfil', icon: UserRound },
+        ];
+    }
 
-const ROLE_LABEL: Record<Role, string> = {
-    CUSTOMER: 'Cliente',
-    AGENT: 'Agente',
-};
+    return [
+        { to: '/pedidos', label: 'Pedidos', icon: ClipboardList },
+        // Banks evaluate credit; only companies have a fleet.
+        ...(user.agent?.type === 'COMPANY'
+            ? [{ to: '/carros', label: 'Minha frota', icon: CarFront }]
+            : []),
+        { to: '/perfil', label: 'Minha conta', icon: UserRound },
+    ];
+}
+
+function userLabel(user: UserResponse): string {
+    if (user.role === 'CUSTOMER') {
+        return 'Cliente';
+    }
+
+    return user.agent?.type === 'BANK' ? 'Banco' : 'Locadora';
+}
 
 function navClass({ isActive }: { isActive: boolean }) {
     return `group relative grid size-12 place-items-center rounded-2xl transition-colors ${
@@ -59,7 +69,7 @@ export function AppLayout() {
         await logout();
     }
 
-    const items = NAV[user.role];
+    const items = navItems(user);
 
     return (
         <div className="min-h-svh lg:flex lg:gap-6 lg:p-6">
@@ -98,7 +108,7 @@ export function AppLayout() {
                     <div className="text-right">
                         <p className="text-sm font-semibold">{user.name}</p>
                         <p className="text-xs text-ink-500">
-                            {ROLE_LABEL[user.role]}
+                            {userLabel(user)}
                         </p>
                     </div>
                     <span

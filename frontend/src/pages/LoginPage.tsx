@@ -1,12 +1,31 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { ApiError } from '../api/client';
-import { translate } from '../api/messages';
+import { translate, translateErrors } from '../api/messages';
 import { AuthLayout } from '../components/AuthLayout';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
+import { PasswordField } from '../components/ui/PasswordField';
 import { TextField } from '../components/ui/TextField';
 import { useAuth } from '../hooks/useAuth';
+
+type Errors = { email?: string; password?: string };
+
+function validate(email: string, password: string): Errors {
+    const errors: Errors = {};
+
+    if (!email.trim()) {
+        errors.email = 'Informe o e-mail.';
+    } else if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+        errors.email = 'E-mail inválido.';
+    }
+
+    if (!password) {
+        errors.password = 'Informe a senha.';
+    }
+
+    return errors;
+}
 
 export function LoginPage() {
     const { login } = useAuth();
@@ -14,6 +33,7 @@ export function LoginPage() {
     const location = useLocation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errors, setErrors] = useState<Errors>({});
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -25,17 +45,31 @@ export function LoginPage() {
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setError(null);
+
+        const clientErrors = validate(email, password);
+        setErrors(clientErrors);
+
+        if (Object.keys(clientErrors).length > 0) {
+            return;
+        }
+
         setSubmitting(true);
 
         try {
-            await login({ email, password });
+            await login({ email: email.trim(), password });
             navigate(from, { replace: true });
         } catch (caught) {
-            setError(
-                caught instanceof ApiError
-                    ? translate(caught.message)
-                    : 'Não foi possível conectar ao servidor.',
-            );
+            if (caught instanceof ApiError) {
+                const fieldErrors = translateErrors(caught.errors);
+                setErrors(fieldErrors);
+                setError(
+                    Object.keys(fieldErrors).length > 0
+                        ? null
+                        : translate(caught.message),
+                );
+            } else {
+                setError('Não foi possível conectar ao servidor.');
+            }
         } finally {
             setSubmitting(false);
         }
@@ -53,25 +87,31 @@ export function LoginPage() {
                     label="E-mail"
                     type="email"
                     autoComplete="email"
-                    required
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    error={errors.email}
+                    onChange={(event) => {
+                        setEmail(event.target.value);
+                        setErrors((current) => ({
+                            ...current,
+                            email: undefined,
+                        }));
+                    }}
                 />
-                <TextField
+                <PasswordField
                     label="Senha"
-                    type="password"
                     autoComplete="current-password"
-                    required
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    error={errors.password}
+                    onChange={(event) => {
+                        setPassword(event.target.value);
+                        setErrors((current) => ({
+                            ...current,
+                            password: undefined,
+                        }));
+                    }}
                 />
 
-                <Button
-                    type="submit"
-                    loading={submitting}
-                    disabled={!email || !password}
-                    className="w-full"
-                >
+                <Button type="submit" loading={submitting} className="w-full">
                     Entrar
                 </Button>
             </form>

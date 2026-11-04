@@ -15,6 +15,7 @@ import {
 import { FormSection } from '../components/FormSection';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
+import { PasswordField } from '../components/ui/PasswordField';
 import { TextField } from '../components/ui/TextField';
 import { useAuth } from '../hooks/useAuth';
 import { onlyDigits } from '../utils/format';
@@ -152,10 +153,9 @@ export function RegisterPage() {
                             updateAccount('email', event.target.value)
                         }
                     />
-                    <TextField
+                    <PasswordField
                         className="sm:col-span-3"
                         label="Senha"
-                        type="password"
                         autoComplete="new-password"
                         hint="Entre 8 e 72 caracteres."
                         value={account.password}
@@ -164,10 +164,9 @@ export function RegisterPage() {
                             updateAccount('password', event.target.value)
                         }
                     />
-                    <TextField
+                    <PasswordField
                         className="sm:col-span-3"
                         label="Confirme a senha"
-                        type="password"
                         autoComplete="new-password"
                         value={account.passwordConfirmation}
                         error={errors.passwordConfirmation}

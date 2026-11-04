@@ -1,17 +1,28 @@
-import { useId, type InputHTMLAttributes } from 'react';
+import {
+    useId,
+    type InputHTMLAttributes,
+    type ReactNode,
+    type Ref,
+} from 'react';
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
     error?: string;
     hint?: string;
+    /** Element shown inside the input, on the right (e.g. a button). */
+    trailing?: ReactNode;
+    /** Reaches the <input>, e.g. to move the focus to it. */
+    ref?: Ref<HTMLInputElement>;
 }
 
 export function TextField({
     label,
     error,
     hint,
+    trailing,
     className = '',
     id,
+    ref,
     ...props
 }: TextFieldProps) {
     const generatedId = useId();
@@ -27,15 +38,23 @@ export function TextField({
             >
                 {label}
             </label>
-            <input
-                id={inputId}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={message ? messageId : undefined}
-                className={`h-12 rounded-2xl border bg-white px-4 text-sm text-ink-900 transition-colors outline-none placeholder:text-ink-400 read-only:cursor-default read-only:bg-cream-50 read-only:text-ink-500 focus:border-brand-400 focus:ring-4 focus:ring-brand-400/20 read-only:focus:ring-0 ${
-                    error ? 'border-red-400' : 'border-cream-200'
-                }`}
-                {...props}
-            />
+            <div className="relative">
+                <input
+                    ref={ref}
+                    id={inputId}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={message ? messageId : undefined}
+                    className={`h-12 w-full rounded-2xl border bg-white pl-4 text-sm text-ink-900 transition-colors outline-none placeholder:text-ink-400 read-only:cursor-default read-only:bg-cream-50 read-only:text-ink-500 focus:border-brand-400 focus:ring-4 focus:ring-brand-400/20 read-only:focus:ring-0 ${
+                        trailing ? 'pr-12' : 'pr-4'
+                    } ${error ? 'border-red-400' : 'border-cream-200'}`}
+                    {...props}
+                />
+                {trailing && (
+                    <div className="absolute inset-y-0 right-1 flex items-center">
+                        {trailing}
+                    </div>
+                )}
+            </div>
             {message && (
                 <p
                     id={messageId}

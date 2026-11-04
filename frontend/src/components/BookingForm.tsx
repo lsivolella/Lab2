@@ -13,6 +13,7 @@ import { TextField } from './ui/TextField';
 /**
  * Rental request for one car: dates, optional bank credit and the price
  * summary. The backend recalculates and checks availability on submit.
+ * Picking another car keeps the dates and the credit option.
  */
 export function BookingForm({ car }: { car: CarResponse }) {
     const today = todayIso();
@@ -22,6 +23,14 @@ export function BookingForm({ car }: { car: CarResponse }) {
     const [error, setError] = useState<string | null>(null);
     const [createdId, setCreatedId] = useState<number | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [carId, setCarId] = useState(car.id);
+
+    // Another car was picked: clear this car's result and error, keep the rest.
+    if (car.id !== carId) {
+        setCarId(car.id);
+        setCreatedId(null);
+        setError(null);
+    }
 
     const days = daysBetween(startDate, endDate);
     const validDates = startDate >= today && days > 0;
