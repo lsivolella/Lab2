@@ -119,8 +119,5 @@ target/
 # =========================================================================
 # PROJECT SPECIFIC / CUSTOM
 # =========================================================================
-# Local Application Uploads (API Development)
-Codigo/backend/uploads/
-
-# AI Assistant Local Settings (Keep CLAUDE.md versioned)
-.claude/settings.local.json
+# Local tool settings
+.claude/
