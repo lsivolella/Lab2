@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import com.lucas.rentacar.dto.order.RentalOrderResponse.ContractResponse;
 import com.lucas.rentacar.dto.order.RentalOrderResponse.CreditContractResponse;
 import com.lucas.rentacar.dto.order.RentalOrderResponse.PartyResponse;
 import com.lucas.rentacar.enums.AgentType;
+import com.lucas.rentacar.enums.ContractPhase;
 import com.lucas.rentacar.enums.OrderStatus;
 import com.lucas.rentacar.enums.OwnershipType;
 import com.lucas.rentacar.model.Agent;
@@ -333,6 +335,9 @@ public class RentalOrderService {
         return new RentalOrderResponse(
                 order.getId(),
                 order.getStatus(),
+                order.getStatus() == OrderStatus.CONTRACTED
+                        ? ContractPhase.of(order.getStartDate(), order.getEndDate(), LocalDate.now())
+                        : null,
                 order.getStartDate(),
                 order.getEndDate(),
                 ChronoUnit.DAYS.between(order.getStartDate(), order.getEndDate()),

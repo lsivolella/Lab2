@@ -2,6 +2,7 @@ package com.lucas.rentacar.service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -73,6 +74,15 @@ public class CarService {
                 .map(CarService::toResponse);
     }
 
+    /** The fleet of the logged-in company. */
+    @Transactional(readOnly = true)
+    public Page<CarResponse> findMine(String email, Pageable pageable) {
+        Agent company = findCompany(email);
+
+        return carRepository.findAllByOwnerIdAndDeletedAtIsNull(company.getId(), pageable)
+                .map(CarService::toResponse);
+    }
+
     @Transactional(readOnly = true)
     public CarResponse findById(Long id) {
         return toResponse(findActive(id));
@@ -121,7 +131,8 @@ public class CarService {
     public void delete(String email, Long id) {
         Car car = findOwned(email, id);
 
-        if (rentalOrderRepository.existsByCarIdAndStatusIn(id, OrderStatus.ACTIVE)) {
+        // Orders whose rental already ended (e.g. finished contracts) do not block it.
+        if (rentalOrderRepository.existsInProgress(id, OrderStatus.ACTIVE, LocalDate.now())) {
             throw conflict("Car has orders in progress.");
         }
 

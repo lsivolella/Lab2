@@ -61,12 +61,18 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/docs", "/docs/**", "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+                        // ZIP code lookup: used by the registration form.
+                        .requestMatchers(HttpMethod.GET, "/api/addresses/*")
+                        .permitAll()
                         // Order matters: /me must match before /{id}.
                         .requestMatchers("/api/customers/me")
                         .hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/customers", "/api/customers/*")
                         .hasRole("AGENT")
-                        // Cars: everyone logged in reads, agents manage the fleet.
+                        // Cars: everyone logged in reads the catalog; a company lists
+                        // its own fleet (/mine) and manages it.
+                        .requestMatchers(HttpMethod.GET, "/api/cars/mine")
+                        .hasRole("AGENT")
                         .requestMatchers(HttpMethod.GET, "/api/cars", "/api/cars/*")
                         .authenticated()
                         .requestMatchers("/api/cars", "/api/cars/**")

@@ -56,6 +56,15 @@ public class CarController {
         return new PagedModel<>(carService.findAll(pageable));
     }
 
+    /** Fleet of the logged-in company agent. */
+    @GetMapping("/mine")
+    public PagedModel<CarResponse> findMine(
+            Authentication authentication,
+            @PageableDefault(size = 20, sort = { "brand", "model" }) Pageable pageable) {
+
+        return new PagedModel<>(carService.findMine(authentication.getName(), pageable));
+    }
+
     @GetMapping("/{id}")
     public CarResponse findById(@PathVariable Long id) {
         return carService.findById(id);

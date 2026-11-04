@@ -20,4 +20,6 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     Optional<Car> findByIdAndDeletedAtIsNull(Long id);
 
     Page<Car> findAllByDeletedAtIsNull(Pageable pageable);
+
+    Page<Car> findAllByOwnerIdAndDeletedAtIsNull(Long ownerId, Pageable pageable);
 }

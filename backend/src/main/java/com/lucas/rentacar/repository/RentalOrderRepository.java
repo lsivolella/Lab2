@@ -22,7 +22,20 @@ public interface RentalOrderRepository extends JpaRepository<RentalOrder, Long> 
 
     Page<RentalOrder> findAllByStatus(OrderStatus status, Pageable pageable);
 
-    boolean existsByCarIdAndStatusIn(Long carId, Collection<OrderStatus> statuses);
+    /**
+     * True when the car has an order in one of the given statuses whose rental
+     * has not ended yet (return date after today).
+     */
+    @Query("""
+            select count(o) > 0 from RentalOrder o
+            where o.car.id = :carId
+              and o.status in :statuses
+              and o.endDate > :today
+            """)
+    boolean existsInProgress(
+            @Param("carId") Long carId,
+            @Param("statuses") Collection<OrderStatus> statuses,
+            @Param("today") LocalDate today);
 
     /**
      * True when another order in one of the given statuses books the car on

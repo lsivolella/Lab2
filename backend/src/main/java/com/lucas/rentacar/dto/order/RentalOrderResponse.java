@@ -5,12 +5,15 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 import com.lucas.rentacar.dto.car.CarResponse;
+import com.lucas.rentacar.enums.ContractPhase;
 import com.lucas.rentacar.enums.OrderStatus;
 import com.lucas.rentacar.enums.OwnershipType;
 
 public record RentalOrderResponse(
         Long id,
         OrderStatus status,
+        /** Only for CONTRACTED orders (null otherwise); calculated from the dates. */
+        ContractPhase contractPhase,
         LocalDate startDate,
         LocalDate endDate,
         long days,
