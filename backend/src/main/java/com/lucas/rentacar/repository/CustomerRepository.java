@@ -13,6 +13,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByUserId(Long userId);
 
+    /** Includes soft-deleted accounts. */
+    Optional<Customer> findByUserEmail(String email);
+
     Optional<Customer> findByUserEmailAndUserDeletedAtIsNull(String email);
 
     Optional<Customer> findByIdAndUserDeletedAtIsNull(Long id);

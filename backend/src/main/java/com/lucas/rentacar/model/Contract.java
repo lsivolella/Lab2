@@ -82,8 +82,15 @@ public class Contract {
         return signedAt;
     }
 
+    /** Only for demo data with past dates; normally set on persist. */
+    public void setSignedAt(Instant signedAt) {
+        this.signedAt = signedAt;
+    }
+
     @PrePersist
     private void onCreate() {
-        signedAt = Instant.now();
+        if (signedAt == null) {
+            signedAt = Instant.now();
+        }
     }
 }

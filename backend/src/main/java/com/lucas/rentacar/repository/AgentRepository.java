@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.lucas.rentacar.enums.AgentType;
 import com.lucas.rentacar.model.Agent;
 
 public interface AgentRepository extends JpaRepository<Agent, Long> {
@@ -14,4 +15,6 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
     Optional<Agent> findByUserEmail(String email);
 
     Optional<Agent> findByCnpj(String cnpj);
+
+    Optional<Agent> findFirstByTypeOrderByIdAsc(AgentType type);
 }

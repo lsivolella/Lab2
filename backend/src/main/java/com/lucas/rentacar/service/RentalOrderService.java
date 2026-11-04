@@ -266,7 +266,7 @@ public class RentalOrderService {
      * Fixed installment (Price table): amount * i / (1 - (1 + i)^-n), where i is
      * the monthly rate as a fraction. With 0% interest it is amount / n.
      */
-    static BigDecimal installmentAmount(BigDecimal amount, BigDecimal monthlyRatePercent, int installments) {
+    public static BigDecimal installmentAmount(BigDecimal amount, BigDecimal monthlyRatePercent, int installments) {
         MathContext mc = MathContext.DECIMAL64;
         BigDecimal rate = monthlyRatePercent.divide(ONE_HUNDRED, mc);
 

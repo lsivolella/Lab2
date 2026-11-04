@@ -1,5 +1,6 @@
 package com.lucas.rentacar.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -22,4 +23,6 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     Page<Car> findAllByDeletedAtIsNull(Pageable pageable);
 
     Page<Car> findAllByOwnerIdAndDeletedAtIsNull(Long ownerId, Pageable pageable);
+
+    List<Car> findAllByOwnerIdAndDeletedAtIsNullOrderByIdAsc(Long ownerId);
 }
