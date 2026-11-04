@@ -6,7 +6,7 @@
         "model": "Mobi",
         "plate": "RTC1A01",
         "dailyRate": 99.90,
-        "imageUrl": "/cars/fiat-mobi.jpg",
+        "imageUrl": "/cars/fiat-mobi.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -16,7 +16,7 @@
         "model": "Argo",
         "plate": "RTC1A02",
         "dailyRate": 119.90,
-        "imageUrl": "/cars/fiat-argo.jpg",
+        "imageUrl": "/cars/fiat-argo.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -26,7 +26,7 @@
         "model": "Onix",
         "plate": "RTC1A03",
         "dailyRate": 129.90,
-        "imageUrl": "/cars/chevrolet-onix.jpg",
+        "imageUrl": "/cars/chevrolet-onix.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -36,7 +36,7 @@
         "model": "HB20",
         "plate": "RTC1A04",
         "dailyRate": 129.90,
-        "imageUrl": "/cars/hyundai-hb20.jpg",
+        "imageUrl": "/cars/hyundai-hb20.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -46,7 +46,7 @@
         "model": "Polo",
         "plate": "RTC1A05",
         "dailyRate": 139.90,
-        "imageUrl": "/cars/volkswagen-polo.jpg",
+        "imageUrl": "/cars/volkswagen-polo.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -56,7 +56,7 @@
         "model": "T-Cross",
         "plate": "RTC1A06",
         "dailyRate": 189.90,
-        "imageUrl": "/cars/volkswagen-t-cross.jpg",
+        "imageUrl": "/cars/volkswagen-t-cross.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -66,7 +66,7 @@
         "model": "Corolla",
         "plate": "RTC1A07",
         "dailyRate": 239.90,
-        "imageUrl": "/cars/toyota-corolla.jpg",
+        "imageUrl": "/cars/toyota-corolla.webp",
         "ownerCnpj": "11222333000181"
     },
     {
@@ -76,7 +76,7 @@
         "model": "Compass",
         "plate": "RTC1A08",
         "dailyRate": 259.90,
-        "imageUrl": "/cars/jeep-compass.jpg",
+        "imageUrl": "/cars/jeep-compass.webp",
         "ownerCnpj": "11222333000181"
     }
 ]
