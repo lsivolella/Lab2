@@ -523,6 +523,7 @@ npm run build
 ├── 📄 COMMIT.md                        # Padrão de commits (Conventional Commits)
 ├── 📁 .vscode/                         # Configurações compartilhadas do VS Code (formatador, JDK)
 ├── 📁 docs/                            # Modelagem: histórias de usuário e diagramas UML (Mermaid)
+│   └── 📁 screenshots/                 # Capturas de tela da aplicação
 ├── 📁 backend/                         # API REST (Spring Boot, Maven)
 │   ├── 📄 pom.xml
 │   ├── 📄 .env.example                 # Modelo das variáveis de ambiente
@@ -560,14 +561,35 @@ npm run build
 
 ### 🌐 Aplicação Web
 
-> [!NOTE]
-> Capturas de tela a serem incluídas.
+As capturas abaixo usam os [dados de demonstração](#-dados-de-demonstração) e ficam em [`docs/screenshots/`](docs/screenshots).
 
-| Login               | Catálogo de carros  |
-| ------------------- | ------------------- |
-| _captura a incluir_ | _captura a incluir_ |
-| **Pedidos**         | **Gestão da frota** |
-| _captura a incluir_ | _captura a incluir_ |
+#### Acesso
+
+| Login                                           | Cadastro de cliente                                      |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| ![Tela de login](docs/screenshots/01-login.jpg) | ![Cadastro de cliente](docs/screenshots/02-register.jpg) |
+
+#### Cliente
+
+| Catálogo e solicitação de aluguel                                                     | Meus pedidos                                                                                 |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ![Catálogo de carros com o painel de reserva](docs/screenshots/03-catalog-client.jpg) | ![Pedidos do cliente com parecer, crédito e contrato](docs/screenshots/04-orders-client.jpg) |
+| **Meu perfil**                                                                        |                                                                                              |
+| ![Perfil do cliente](docs/screenshots/05-profile-client.jpg)                          |                                                                                              |
+
+#### Agente: locadora
+
+| Pedidos                                                                       | Minha frota                                                                                  |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ![Pedidos vistos pela locadora](docs/screenshots/06-orders-rental.jpg)        | ![Frota da locadora com cadastro, edição e exclusão](docs/screenshots/07-catalog-rental.jpg) |
+| **Minha conta**                                                               |                                                                                              |
+| ![Conta da locadora e troca de senha](docs/screenshots/08-profile-rental.jpg) |                                                                                              |
+
+#### Agente: banco
+
+| Pedidos                                                           |
+| ----------------------------------------------------------------- |
+| ![Pedidos vistos pelo banco](docs/screenshots/09-orders-bank.jpg) |
 
 ### 💻 Exemplo de Saída no Terminal
 
