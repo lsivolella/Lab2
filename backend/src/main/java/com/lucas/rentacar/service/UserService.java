@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.lucas.rentacar.dto.user.ChangePasswordRequest;
 import com.lucas.rentacar.dto.user.UserResponse;
+import com.lucas.rentacar.dto.user.UserResponse.AgentProfile;
 import com.lucas.rentacar.model.Agent;
 import com.lucas.rentacar.model.Customer;
 import com.lucas.rentacar.model.User;
@@ -44,11 +45,30 @@ public class UserService {
     public UserResponse findByEmail(String email) {
         User user = findUser(email);
 
-        return new UserResponse(
-                user.getId(),
-                findProfileName(user),
-                user.getEmail(),
-                user.getRole());
+        return switch (user.getRole()) {
+            case CUSTOMER -> {
+                Customer customer = customerRepository.findByUserId(user.getId())
+                        .orElseThrow(() -> missingProfile(user));
+
+                yield new UserResponse(
+                        user.getId(),
+                        customer.getName(),
+                        user.getEmail(),
+                        user.getRole(),
+                        null);
+            }
+            case AGENT -> {
+                Agent agent = agentRepository.findByUserId(user.getId())
+                        .orElseThrow(() -> missingProfile(user));
+
+                yield new UserResponse(
+                        user.getId(),
+                        agent.getName(),
+                        user.getEmail(),
+                        user.getRole(),
+                        new AgentProfile(agent.getId(), agent.getType()));
+            }
+        };
     }
 
     @Transactional
@@ -73,17 +93,6 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "User not found."));
-    }
-
-    private String findProfileName(User user) {
-        return switch (user.getRole()) {
-            case CUSTOMER -> customerRepository.findByUserId(user.getId())
-                    .map(Customer::getName)
-                    .orElseThrow(() -> missingProfile(user));
-            case AGENT -> agentRepository.findByUserId(user.getId())
-                    .map(Agent::getName)
-                    .orElseThrow(() -> missingProfile(user));
-        };
     }
 
     private IllegalStateException missingProfile(User user) {

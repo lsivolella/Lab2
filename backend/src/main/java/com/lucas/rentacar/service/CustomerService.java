@@ -64,7 +64,8 @@ public class CustomerService {
                 savedUser.getId(),
                 savedCustomer.getName(),
                 savedUser.getEmail(),
-                savedUser.getRole());
+                savedUser.getRole(),
+                null);
     }
 
     @Transactional(readOnly = true)
