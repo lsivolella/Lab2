@@ -52,6 +52,7 @@
     - [Instalação de Dependências](#-instalação-de-dependências)
     - [Como Executar a Aplicação](#-como-executar-a-aplicação)
 - [Credenciais para Testes](#-credenciais-para-testes)
+- [Dados de Demonstração](#-dados-de-demonstração)
 - [Como Testar (Passo a Passo)](#-como-testar-passo-a-passo)
 - [API REST](#-api-rest)
 - [Testes Automatizados](#-testes-automatizados)
@@ -277,6 +278,7 @@ cp backend/.env.example backend/.env
 | `SEED_COMPANY_PASSWORD`     | Senha da locadora (sem senha, ela não é criada)          | `senha1234`                                                                                                          |
 | `SEED_BANK_EMAIL`           | E-mail do banco criado na inicialização                  | `banco@rentacar.com`                                                                                                 |
 | `SEED_BANK_PASSWORD`        | Senha do banco (sem senha, ele não é criado)             | `senha1234`                                                                                                          |
+| `SEED_CUSTOMER_PASSWORD`    | Senha dos clientes de demonstração (padrão `senha1234`)  | `senha1234`                                                                                                          |
 
 > [!WARNING]
 > A URL do banco contém a senha e a chave do Supabase dá acesso total ao projeto. Nunca as coloque no código, no frontend ou em um commit.
@@ -315,7 +317,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-O backend sobe em `http://localhost:8080` (Swagger UI em `http://localhost:8080/docs`). Na primeira execução ele cria as tabelas, as contas da locadora e do banco e a **frota inicial de 8 carros** (`backend/src/main/resources/seed/cars.json`).
+O backend sobe em `http://localhost:8080` (Swagger UI em `http://localhost:8080/docs`). Na primeira execução ele cria as tabelas, as contas da locadora e do banco e a **frota inicial de 8 carros** (`backend/src/main/resources/seed/cars.json`). **A cada inicialização**, ele também recria os [dados de demonstração](#-dados-de-demonstração): dois clientes e pedidos em todas as situações, com datas relativas ao dia.
 
 > [!IMPORTANT]
 > Rode o backend **de dentro da pasta `backend`**: é de lá que ele lê o arquivo `.env`.
@@ -337,23 +339,59 @@ Acesse **`http://localhost:5173`**.
 | -------------------------------------- | -------------------------------- | ----------------------------------------- |
 | 🏢 Locadora — _Rentacar Locadora Ltda_ | `empresa@rentacar.com`           | `senha1234`                               |
 | 🏦 Banco — _Banco Rentacar S.A._       | `banco@rentacar.com`             | `senha1234`                               |
-| 🧑 Cliente                             | criado pela tela **Cadastre-se** | escolhida no cadastro (8 a 72 caracteres) |
+| 🧑 Cliente de demonstração — _Ana_     | `cliente@rentacar.com`           | `senha1234`                               |
+| 🧑 Cliente de demonstração — _Bruno_   | `cliente2@rentacar.com`          | `senha1234`                               |
+| 🧑 Novo cliente                        | criado pela tela **Cadastre-se** | escolhida no cadastro (8 a 72 caracteres) |
 
-As contas de agente **não são criadas por usuários**: o backend as cria na primeira inicialização (_seed_), com os valores de `SEED_*` do `backend/.env`. As senhas acima são as do `backend/.env.example`, que é o ponto de partida do `.env`.
+As contas de agente e de demonstração **não são criadas por usuários**: o backend as cria na inicialização (_seed_), com os valores de `SEED_*` do `backend/.env`. As senhas acima são as do `backend/.env.example`, que é o ponto de partida do `.env`.
 
-**Dados de apoio para o cadastro de clientes** (fictícios):
+**Dados de apoio para cadastrar um novo cliente** (fictícios):
 
 - **CPFs válidos para teste:** `529.982.247-25`, `111.444.777-35`
 - **CEP para testar o preenchimento automático:** `01310-100` (Avenida Paulista, São Paulo/SP)
 
 > [!NOTE]
-> As contas de agente são criadas **uma única vez**, na primeira inicialização. Trocar a senha no `.env` depois disso não altera uma conta já existente; para isso, use **Minha conta → Senha** dentro do sistema. São credenciais de demonstração para avaliação: em um ambiente real, defina senhas próprias no `.env`.
+> As contas de agente são criadas **uma única vez**, na primeira inicialização. Trocar a senha no `.env` depois disso não altera uma conta já existente; para isso, use **Minha conta → Senha** dentro do sistema. Já os clientes de demonstração voltam à senha do `.env` a cada inicialização. São credenciais de demonstração para avaliação: em um ambiente real, defina senhas próprias no `.env`.
+
+---
+
+## 🎬 Dados de Demonstração
+
+Para que todas as situações possam ser testadas sem preparação, **a cada inicialização** o backend (classe `DemoDataSeeder`):
+
+1. cria os clientes de demonstração **Ana** (`cliente@rentacar.com`) e **Bruno** (`cliente2@rentacar.com`), ou os **restaura**, caso tenham sido excluídos ou tenham trocado a senha durante os testes;
+2. **apaga todos os pedidos desses dois clientes** e cria 9 pedidos novos, com datas calculadas a partir do **dia em que o backend iniciou** (**D**).
+
+| Cliente | Situação                                            | Período     | Bom para testar                                           |
+| ------- | --------------------------------------------------- | ----------- | --------------------------------------------------------- |
+| Ana     | Em análise, sem crédito                             | D+5 → D+8   | Locadora: alterar as datas e avaliar                      |
+| Ana     | Em análise, com crédito                             | D+10 → D+15 | Banco: avaliar e definir juros e parcelas                 |
+| Ana     | Aprovado, sem crédito                               | D+3 → D+6   | Locadora: executar o contrato (opções Locadora e Cliente) |
+| Bruno   | Aprovado, com crédito (6 parcelas)                  | D+20 → D+25 | Locadora: executar o contrato com a opção Banco (credor)  |
+| Bruno   | Recusado                                            | D+7 → D+9   | Visualizar o parecer                                      |
+| Bruno   | Cancelado                                           | D+12 → D+14 | Filtro de cancelados                                      |
+| Ana     | Contratado (ainda não começou)                      | D+30 → D+33 | Status _Contratado_                                       |
+| Ana     | Contratado com crédito, registrado em nome do banco | D−2 → D+3   | Status _Em andamento_                                     |
+| Bruno   | Contratado, registrado em nome do cliente           | D−15 → D−10 | Status _Encerrado_                                        |
+
+- Os pedidos usam carros da locadora de demonstração. Se um carro já estiver ocupado nas datas por um pedido feito manualmente, o seeder escolhe outro carro livre.
+- **Pedidos de outros clientes nunca são alterados.** Clientes criados pelo cadastro mantêm tudo o que for feito entre um reinício e outro.
+- Para manter o banco como está entre reinícios, desligue o recurso em `backend/src/main/resources/application.properties`:
+    ```properties
+    app.seed.demo-data.enabled=false
+    ```
+
+> [!TIP]
+> Antes de uma apresentação, reinicie o backend: os pedidos de demonstração voltam ao estado inicial, com as datas corretas para o dia.
 
 ---
 
 ## 🧪 Como Testar (Passo a Passo)
 
 O roteiro abaixo percorre todos os perfis. Para alternar entre contas sem sair e entrar o tempo todo, use uma **janela anônima** para a segunda conta.
+
+> [!TIP]
+> Para ir direto às telas de agente, use os [dados de demonstração](#-dados-de-demonstração): os pedidos da Ana e do Bruno já cobrem todas as situações, e os passos 4 e 5 podem ser feitos com eles, sem criar pedidos antes.
 
 ### 1. Cadastro e login
 

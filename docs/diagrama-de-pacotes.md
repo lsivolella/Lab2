@@ -47,7 +47,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     application["application<br/><i>RentacarApplication</i>"]
-    config["config<br/><i>SecurityConfig, CsrfCookieFilter,<br/>AgentSeeder, CarSeeder, StorageProperties</i>"]
+    config["config<br/><i>SecurityConfig, CsrfCookieFilter,<br/>AgentSeeder, CarSeeder, DemoDataSeeder,<br/>StorageProperties</i>"]
     controller["controller<br/><i>Auth, User, Customer, Car,<br/>RentalOrder, Address, ApiExceptionHandler</i>"]
     service["service<br/><i>Customer, User, Car, RentalOrder,<br/>ImageStorage, AddressLookup, AppUserDetails</i>"]
     repository["repository<br/><i>Spring Data JPA</i>"]
@@ -76,16 +76,16 @@ flowchart TB
     model --> enums
 ```
 
-| Pacote        | Camada (MVC)                  | Responsabilidade                                                                                                 |
-| ------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `application` | —                             | Classe principal; inicia o Spring e define o pacote base.                                                        |
-| `controller`  | **Controller**                | Endpoints REST: recebe e valida os DTOs, chama os services e devolve DTOs. Inclui o tratamento de erros em JSON. |
-| `service`     | **Model** (regras de negócio) | Regras do domínio: cadastro, pedidos, avaliação, crédito, contrato, frota; integrações com o Storage e o ViaCEP. |
-| `repository`  | **Model** (persistência)      | Interfaces Spring Data JPA e consultas (disponibilidade, filtros).                                               |
-| `model`       | **Model** (entidades)         | Entidades JPA mapeadas para as tabelas do schema `app`.                                                          |
-| `dto`         | Contrato da API               | Objetos de entrada (com Bean Validation) e de saída; as entidades nunca são expostas.                            |
-| `enums`       | Domínio                       | Papéis, tipos de agente, status do pedido, tipo de propriedade e fase do contrato.                               |
-| `config`      | Infraestrutura                | Segurança (sessão, CSRF, CORS, permissões por papel), _seeds_ de agentes e carros, propriedades do Storage.      |
+| Pacote        | Camada (MVC)                  | Responsabilidade                                                                                                                   |
+| ------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `application` | —                             | Classe principal; inicia o Spring e define o pacote base.                                                                          |
+| `controller`  | **Controller**                | Endpoints REST: recebe e valida os DTOs, chama os services e devolve DTOs. Inclui o tratamento de erros em JSON.                   |
+| `service`     | **Model** (regras de negócio) | Regras do domínio: cadastro, pedidos, avaliação, crédito, contrato, frota; integrações com o Storage e o ViaCEP.                   |
+| `repository`  | **Model** (persistência)      | Interfaces Spring Data JPA e consultas (disponibilidade, filtros).                                                                 |
+| `model`       | **Model** (entidades)         | Entidades JPA mapeadas para as tabelas do schema `app`.                                                                            |
+| `dto`         | Contrato da API               | Objetos de entrada (com Bean Validation) e de saída; as entidades nunca são expostas.                                              |
+| `enums`       | Domínio                       | Papéis, tipos de agente, status do pedido, tipo de propriedade e fase do contrato.                                                 |
+| `config`      | Infraestrutura                | Segurança (sessão, CSRF, CORS, permissões por papel), _seeds_ de agentes, carros e dados de demonstração, propriedades do Storage. |
 
 > A **View** do MVC é o frontend React, que consome a API em JSON.
 
