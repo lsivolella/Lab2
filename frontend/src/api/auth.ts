@@ -21,3 +21,14 @@ export function register(request: RegisterRequest): Promise<UserResponse> {
         body: request,
     });
 }
+
+/** Works for customers and agents; requires the current password. */
+export function changePassword(
+    currentPassword: string,
+    newPassword: string,
+): Promise<void> {
+    return api<void>('/users/me/password', {
+        method: 'PATCH',
+        body: { currentPassword, newPassword },
+    });
+}

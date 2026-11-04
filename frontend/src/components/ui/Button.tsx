@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-type Variant = 'primary' | 'dark' | 'ghost';
+type Variant = 'primary' | 'dark' | 'ghost' | 'danger';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: Variant;
@@ -11,6 +11,7 @@ const VARIANTS: Record<Variant, string> = {
     primary: 'bg-brand-400 text-ink-900 hover:bg-brand-300',
     dark: 'bg-ink-900 text-cream-50 hover:bg-ink-700',
     ghost: 'bg-transparent text-ink-900 hover:bg-cream-100',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
 };
 
 export function Button({

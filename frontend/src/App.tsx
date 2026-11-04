@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import { CarsPage } from './pages/CarsPage';
 import { LoginPage } from './pages/LoginPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 import { PublicOnly, RequireAuth } from './routes/guards';
 
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
                     { path: '/', element: <RoleHome /> },
                     { path: '/carros', element: <CarsPage /> },
                     { path: '/pedidos', element: <OrdersPage /> },
+                    { path: '/perfil', element: <ProfilePage /> },
                 ],
             },
         ],

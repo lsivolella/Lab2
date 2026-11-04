@@ -1,4 +1,10 @@
-import { CarFront, ClipboardList, LogOut, type LucideIcon } from 'lucide-react';
+import {
+    CarFront,
+    ClipboardList,
+    LogOut,
+    UserRound,
+    type LucideIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
@@ -14,10 +20,12 @@ const NAV: Record<Role, NavItem[]> = {
     CUSTOMER: [
         { to: '/carros', label: 'Carros', icon: CarFront },
         { to: '/pedidos', label: 'Meus pedidos', icon: ClipboardList },
+        { to: '/perfil', label: 'Meu perfil', icon: UserRound },
     ],
     AGENT: [
         { to: '/pedidos', label: 'Pedidos', icon: ClipboardList },
         { to: '/carros', label: 'Frota', icon: CarFront },
+        { to: '/perfil', label: 'Minha conta', icon: UserRound },
     ],
 };
 
