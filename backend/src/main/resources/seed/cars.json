@@ -1,0 +1,82 @@
+[
+    {
+        "registration": "10000000001",
+        "year": 2024,
+        "brand": "Fiat",
+        "model": "Mobi",
+        "plate": "RTC1A01",
+        "dailyRate": 99.90,
+        "imageUrl": "/cars/fiat-mobi.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000002",
+        "year": 2024,
+        "brand": "Fiat",
+        "model": "Argo",
+        "plate": "RTC1A02",
+        "dailyRate": 119.90,
+        "imageUrl": "/cars/fiat-argo.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000003",
+        "year": 2025,
+        "brand": "Chevrolet",
+        "model": "Onix",
+        "plate": "RTC1A03",
+        "dailyRate": 129.90,
+        "imageUrl": "/cars/chevrolet-onix.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000004",
+        "year": 2024,
+        "brand": "Hyundai",
+        "model": "HB20",
+        "plate": "RTC1A04",
+        "dailyRate": 129.90,
+        "imageUrl": "/cars/hyundai-hb20.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000005",
+        "year": 2025,
+        "brand": "Volkswagen",
+        "model": "Polo",
+        "plate": "RTC1A05",
+        "dailyRate": 139.90,
+        "imageUrl": "/cars/volkswagen-polo.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000006",
+        "year": 2025,
+        "brand": "Volkswagen",
+        "model": "T-Cross",
+        "plate": "RTC1A06",
+        "dailyRate": 189.90,
+        "imageUrl": "/cars/volkswagen-t-cross.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000007",
+        "year": 2024,
+        "brand": "Toyota",
+        "model": "Corolla",
+        "plate": "RTC1A07",
+        "dailyRate": 239.90,
+        "imageUrl": "/cars/toyota-corolla.jpg",
+        "ownerCnpj": "11222333000181"
+    },
+    {
+        "registration": "10000000008",
+        "year": 2025,
+        "brand": "Jeep",
+        "model": "Compass",
+        "plate": "RTC1A08",
+        "dailyRate": 259.90,
+        "imageUrl": "/cars/jeep-compass.jpg",
+        "ownerCnpj": "11222333000181"
+    }
+]

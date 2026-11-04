@@ -117,6 +117,7 @@ public class CarService {
                 car.getModel(),
                 car.getPlate(),
                 car.getDailyRate(),
+                car.getImageUrl(),
                 new OwnerResponse(owner.getId(), owner.getName()));
     }
 

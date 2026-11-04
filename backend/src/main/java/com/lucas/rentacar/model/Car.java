@@ -110,6 +110,20 @@ public class Car {
         this.dailyRate = dailyRate;
     }
 
+    // Either a path served by the frontend for seeded cars (/cars/fiat-argo.webp)
+    // or the public URL of an image uploaded to storage. Null until the first
+    // image is uploaded for a car created through the API.
+    @Column(length = 500)
+    private String imageUrl;
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     private Instant deletedAt;
 
     public Instant getDeletedAt() {

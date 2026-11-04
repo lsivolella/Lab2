@@ -10,6 +10,7 @@ public record CarResponse(
         String model,
         String plate,
         BigDecimal dailyRate,
+        String imageUrl,
         OwnerResponse owner) {
 
     /** Company agent that owns the car. */
