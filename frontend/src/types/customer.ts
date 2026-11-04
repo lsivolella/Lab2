@@ -18,6 +18,27 @@ export interface EmploymentIncomeRequest {
     amount: number;
 }
 
+/** Customer profile (CustomerResponse in the backend). */
+export interface CustomerResponse {
+    id: number;
+    name: string;
+    email: string;
+    rg: string;
+    cpf: string;
+    profession: string;
+    address: Omit<AddressRequest, 'complement'> & { complement: string | null };
+    incomes: EmploymentIncomeRequest[];
+}
+
+/** Profile data a customer can change; CPF and email are fixed. */
+export interface CustomerUpdateRequest {
+    name: string;
+    rg: string;
+    profession: string;
+    address: AddressRequest;
+    incomes: EmploymentIncomeRequest[];
+}
+
 export interface RegisterRequest {
     name: string;
     rg: string;
