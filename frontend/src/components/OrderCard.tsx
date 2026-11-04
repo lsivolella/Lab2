@@ -60,7 +60,11 @@ export function OrderCard({ order, viewer, onChange }: OrderCardProps) {
     const permissions = viewer.agent
         ? agentPermissions(order, viewer.agent)
         : null;
-    const canChange = isCustomer && order.status === 'SUBMITTED';
+    // Customers change and cancel their orders under analysis; agents change
+    // the dates of the orders they evaluate (the credit option stays the
+    // customer's choice).
+    const canCancel = isCustomer && order.status === 'SUBMITTED';
+    const canChange = canCancel || Boolean(permissions?.canEvaluate);
     const today = todayIso();
     const newDays = daysBetween(startDate, endDate);
 
@@ -249,12 +253,22 @@ export function OrderCard({ order, viewer, onChange }: OrderCardProps) {
             )}
 
             {panel === 'none' &&
+                !editing &&
                 (permissions?.canEvaluate || permissions?.canContract) && (
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex flex-wrap justify-end gap-2">
                         {permissions.canEvaluate ? (
-                            <Button onClick={() => setPanel('evaluate')}>
-                                Avaliar pedido
-                            </Button>
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    className="ring-1 ring-cream-200"
+                                    onClick={() => setEditing(true)}
+                                >
+                                    Alterar datas
+                                </Button>
+                                <Button onClick={() => setPanel('evaluate')}>
+                                    Avaliar pedido
+                                </Button>
+                            </>
                         ) : (
                             <Button
                                 variant="dark"
@@ -302,21 +316,23 @@ export function OrderCard({ order, viewer, onChange }: OrderCardProps) {
                             Salvar
                         </Button>
                     </div>
-                    <label className="flex items-center gap-2 text-sm sm:col-span-3">
-                        <input
-                            type="checkbox"
-                            checked={creditRequested}
-                            onChange={(event) =>
-                                setCreditRequested(event.target.checked)
-                            }
-                            className="size-4 accent-brand-600"
-                        />
-                        Solicitar crédito bancário
-                    </label>
+                    {isCustomer && (
+                        <label className="flex items-center gap-2 text-sm sm:col-span-3">
+                            <input
+                                type="checkbox"
+                                checked={creditRequested}
+                                onChange={(event) =>
+                                    setCreditRequested(event.target.checked)
+                                }
+                                className="size-4 accent-brand-600"
+                            />
+                            Solicitar crédito bancário
+                        </label>
+                    )}
                 </form>
             )}
 
-            {canChange && !editing && (
+            {canCancel && !editing && (
                 <div className="mt-4 flex flex-wrap justify-end gap-2">
                     {confirmingCancel ? (
                         <>

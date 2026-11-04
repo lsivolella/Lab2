@@ -40,8 +40,8 @@ import com.lucas.rentacar.repository.RentalOrderRepository;
 
 /**
  * Rental orders. Customers create, read, change and cancel their own orders;
- * agents read and change any order. Orders can only be changed or cancelled
- * while SUBMITTED.
+ * agents read every order and change the dates of the orders they evaluate.
+ * Orders can only be changed or cancelled while SUBMITTED.
  *
  * Evaluation (financial opinion): orders that requested credit are evaluated
  * by a bank, which sets the credit terms when approving; other orders are
@@ -129,7 +129,17 @@ public class RentalOrderService {
         RentalOrder order = findVisible(email, agent, id);
 
         requireStatus(order, OrderStatus.SUBMITTED, "Only submitted orders can be changed.");
-        applyBooking(order, request, order.getId());
+
+        if (agent) {
+            // An agent changes an order it is responsible for evaluating, and
+            // only the booking: requesting credit stays the customer's choice.
+            requireEvaluator(order, findAgent(email));
+            boolean creditRequested = order.isCreditRequested();
+            applyBooking(order, request, order.getId());
+            order.setCreditRequested(creditRequested);
+        } else {
+            applyBooking(order, request, order.getId());
+        }
 
         return toResponse(order);
     }

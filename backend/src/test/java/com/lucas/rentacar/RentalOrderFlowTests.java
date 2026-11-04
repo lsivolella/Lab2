@@ -151,6 +151,16 @@ class RentalOrderFlowTests {
         perform(get("/api/orders/" + orderId), otherCustomer, 404);
         perform(get("/api/orders/" + orderId), agent, 200);
 
+        // Agents change only the orders they evaluate, and cannot turn on credit.
+        perform(put("/api/orders/" + orderId).content(orderJson(carId, start, start.plusDays(4))), bank, 403);
+        String changedByAgent = perform(
+                put("/api/orders/" + orderId).content(orderJson(carId, start, start.plusDays(4), true)),
+                agent,
+                200);
+        assertJson(changedByAgent, "$.totalAmount", 600.0);
+        assertJson(changedByAgent, "$.creditRequested", false);
+        perform(put("/api/orders/" + orderId).content(orderJson(carId, start, start.plusDays(5))), customer, 200);
+
         // Without credit, only the company that owns the car evaluates;
         // contract requires approval first.
         perform(post("/api/orders/" + orderId + "/evaluation").content(evaluationJson(true)), customer, 403);
