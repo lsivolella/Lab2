@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.lucas.rentacar.dto.car.CarRequest;
 import com.lucas.rentacar.dto.car.CarResponse;
@@ -65,6 +68,16 @@ public class CarController {
             @Valid @RequestBody CarRequest request) {
 
         return carService.update(authentication.getName(), id, request);
+    }
+
+    /** Multipart upload with the image in the "file" part (JPEG, PNG or WebP, up to 2 MB). */
+    @PutMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public CarResponse updateImage(
+            Authentication authentication,
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file) {
+
+        return carService.updateImage(authentication.getName(), id, file);
     }
 
     @DeleteMapping("/{id}")

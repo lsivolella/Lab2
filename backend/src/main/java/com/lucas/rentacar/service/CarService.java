@@ -1,5 +1,6 @@
 package com.lucas.rentacar.service;
 
+import java.io.IOException;
 import java.time.Instant;
 
 import org.springframework.data.domain.Page;
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.lucas.rentacar.dto.car.CarRequest;
@@ -22,23 +24,28 @@ import com.lucas.rentacar.repository.RentalOrderRepository;
 
 /**
  * Fleet CRUD. Only company agents register cars, and each company changes or
- * deletes only its own. Deleting is a soft delete and is refused while the car
- * has orders in progress.
+ * deletes only its own (including the car image). Deleting is a soft delete
+ * and is refused while the car has orders in progress.
  */
 @Service
 public class CarService {
 
+    private static final long MAX_IMAGE_BYTES = 2L * 1024 * 1024;
+
     private final CarRepository carRepository;
     private final AgentRepository agentRepository;
     private final RentalOrderRepository rentalOrderRepository;
+    private final ImageStorageService imageStorageService;
 
     public CarService(
             CarRepository carRepository,
             AgentRepository agentRepository,
-            RentalOrderRepository rentalOrderRepository) {
+            RentalOrderRepository rentalOrderRepository,
+            ImageStorageService imageStorageService) {
         this.carRepository = carRepository;
         this.agentRepository = agentRepository;
         this.rentalOrderRepository = rentalOrderRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     @Transactional
@@ -84,6 +91,28 @@ public class CarService {
         }
 
         apply(car, request);
+
+        return toResponse(car);
+    }
+
+    /**
+     * Replaces the car's image. Accepts JPEG, PNG or WebP (detected from the
+     * file content); the size limit is enforced by spring.servlet.multipart.
+     * A previous uploaded image is deleted from storage; seed images are kept.
+     */
+    @Transactional
+    public CarResponse updateImage(String email, Long id, MultipartFile file) {
+        Car car = findOwned(email, id);
+        byte[] bytes = readImage(file);
+        ImageType type = ImageType.detect(bytes)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Image must be a JPEG, PNG or WebP file."));
+
+        String previousUrl = car.getImageUrl();
+
+        car.setImageUrl(imageStorageService.upload("cars/" + car.getId(), bytes, type));
+        imageStorageService.deleteIfStored(previousUrl);
 
         return toResponse(car);
     }
@@ -156,6 +185,24 @@ public class CarService {
         car.setModel(request.model().trim());
         car.setPlate(request.plate());
         car.setDailyRate(request.dailyRate());
+    }
+
+    private byte[] readImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is required.");
+        }
+
+        // Same limit as spring.servlet.multipart.max-file-size, checked here too
+        // so the rule does not depend only on the servlet configuration.
+        if (file.getSize() > MAX_IMAGE_BYTES) {
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "Image must be at most 2 MB.");
+        }
+
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file could not be read.");
+        }
     }
 
     private ResponseStatusException conflict(String reason) {
